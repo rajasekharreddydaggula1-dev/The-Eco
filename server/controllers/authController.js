@@ -1,0 +1,159 @@
+const User = require('../models/User');
+const Store = require('../models/Store');
+const jwt = require('jsonwebtoken');
+
+// Generate JWT Token
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
+    expiresIn: '30d'
+  });
+};
+
+// @desc    Register User
+// @route   POST /api/auth/register
+// @access  Public
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password, role, storeName, storeDescription } = req.body;
+
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'User already exists' });
+    }
+
+    // Determine default status
+    const status = 'active';
+
+    // If Vendor, check if store name is provided
+    if (role === 'Vendor' && !storeName) {
+      return res.status(400).json({ success: false, message: 'Store name is required for Vendor registration' });
+    }
+
+    // Create user
+    let user = await User.create({
+      name,
+      email,
+      password,
+      role: role || 'Customer',
+      status
+    });
+
+    // If role is Vendor, create the Store
+    if (role === 'Vendor') {
+      // Create slug from name
+      const slug = storeName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+
+      // Check if slug or name exists
+      const storeExists = await Store.findOne({ $or: [{ name: storeName }, { slug }] });
+      if (storeExists) {
+        // Rollback user creation
+        await User.findByIdAndDelete(user._id);
+        return res.status(400).json({ success: false, message: 'Store name is already taken' });
+      }
+
+      const store = await Store.create({
+        name: storeName,
+        slug,
+        description: storeDescription || '',
+        vendor: user._id,
+        status: 'active'
+      });
+
+      // Update user with store ID
+      user.store = store._id;
+      await user.save();
+    }
+
+    // Refresh user object and sign token
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        store: user.store,
+        status: user.status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Login User
+// @route   POST /api/auth/login
+// @access  Public
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate email & password
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+    }
+
+    // Check for user
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Check status
+    if (user.status === 'suspended') {
+      return res.status(403).json({ success: false, message: 'Your account is suspended' });
+    }
+
+    // Check if password matches
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // If vendor, resolve store info to return to frontend
+    let storeDetails = null;
+    if (user.role === 'Vendor' && user.store) {
+      storeDetails = await Store.findById(user.store);
+    }
+
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        store: user.store,
+        status: user.status,
+        storeDetails
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Current Logged In User
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('store');
+    res.status(200).json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

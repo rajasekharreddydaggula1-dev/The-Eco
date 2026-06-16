@@ -1,0 +1,256 @@
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams, Link } from 'react-router-dom';
+import { ShoppingBag, Search, Sparkles, Building, ChevronRight, Check } from 'lucide-react';
+import { fetchStores, fetchStoreBySlug } from '../store/slices/storeSlice';
+import { fetchProducts } from '../store/slices/productSlice';
+import ProductCard from '../components/ProductCard';
+
+export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
+  const { storeSlug } = useParams();
+  const dispatch = useDispatch();
+
+  const { stores, currentStore, loading: storeLoading } = useSelector(state => state.stores);
+  const { products, loading: productsLoading } = useSelector(state => state.products);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+
+  // 1. Load Stores List if at root, or Load Specific Store details if storeSlug is present
+  useEffect(() => {
+    if (!storeSlug) {
+      dispatch(fetchStores());
+    } else {
+      dispatch(fetchStoreBySlug(storeSlug));
+      localStorage.setItem('last_visited_store', storeSlug);
+    }
+  }, [storeSlug, dispatch]);
+
+  // 2. Load Products when Store is resolved
+  useEffect(() => {
+    if (storeSlug && currentStore) {
+      dispatch(fetchProducts({ 
+        tenantId: currentStore._id, 
+        search: searchTerm, 
+        category: selectedCategory 
+      }));
+    }
+  }, [storeSlug, currentStore, searchTerm, selectedCategory, dispatch]);
+
+  const triggerToast = (productName) => {
+    setToastMessage(`Added ${productName} to your cart!`);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  // Render ROOT general directory listing all stores
+  if (!storeSlug) {
+    return (
+      <div className="relative min-h-screen bg-animated-gradient py-12">
+        {/* Decorative blur */}
+        <div className="absolute top-10 left-10 h-72 w-72 rounded-full bg-brand-600/10 blur-3xl" />
+        <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-eco-600/10 blur-3xl" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
+          {/* Hero Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300 border border-brand-500/20">
+              <Sparkles className="h-3.5 w-3.5" />
+              SaaS Multi-Tenant Ecosystem
+            </div>
+            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl leading-tight">
+              Explore Storefronts on <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-eco-400">The Eco</span>
+            </h1>
+            <p className="text-sm text-slate-400">
+              A comprehensive marketplace powered by database partitioning. Enter any of our independent merchant storefronts below to browse and purchase items securely.
+            </p>
+          </div>
+
+          {/* Directory Listings */}
+          {storeLoading ? (
+            <div className="text-center text-slate-500 py-12">Loading marketplace storefronts...</div>
+          ) : stores.length === 0 ? (
+            <div className="text-center text-slate-500 py-12 border border-dashed border-slate-800 rounded-xl max-w-md mx-auto">
+              No storefronts are currently registered. Register as a Merchant/Vendor on the login page to launch a storefront!
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+              {stores.map((store) => (
+                <Link
+                  key={store._id}
+                  to={`/store/${store.slug}`}
+                  className="group block rounded-2xl glass-panel glass-panel-hover overflow-hidden"
+                >
+                  {/* Banner */}
+                  <div className="h-32 w-full bg-slate-950 overflow-hidden relative">
+                    <img
+                      src={store.banner || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=600'}
+                      alt=""
+                      className="h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                  </div>
+
+                  {/* Store Details */}
+                  <div className="p-6 relative -mt-8 flex flex-col justify-between min-h-[150px]">
+                    <div className="flex items-start gap-4">
+                      {/* Logo */}
+                      <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center shadow-lg">
+                        {store.logo ? (
+                          <img src={store.logo} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-lg font-bold text-slate-400">{store.name[0]}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-white group-hover:text-eco-400 transition-colors truncate">
+                          {store.name}
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-mono tracking-tight mt-0.5">/store/{store.slug}</p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-400 mt-4 line-clamp-2 leading-relaxed">
+                      {store.description || 'No store description provided by vendor.'}
+                    </p>
+
+                    <div className="mt-4 pt-4 border-t border-slate-900 flex justify-between items-center text-xs font-semibold text-brand-300">
+                      <span>Browse Products</span>
+                      <ChevronRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Render SPECIFIC Store Catalog
+  if (storeLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-slate-400 text-xs">Loading storefront details...</div>;
+  }
+
+  if (!currentStore) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 bg-slate-950">
+        <span className="text-4xl mb-4">⚠️</span>
+        <h2 className="text-lg font-bold text-slate-200">Storefront Not Found</h2>
+        <p className="text-xs text-slate-500 mt-1">The store matching slug "/store/{storeSlug}" does not exist or has been suspended.</p>
+        <Link to="/" className="mt-6 rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-500">
+          Return to Marketplace Directory
+        </Link>
+      </div>
+    );
+  }
+
+  // Categories list extracted from products
+  const categories = [...new Set(products.map(p => p.category))];
+
+  return (
+    <div className="min-h-screen bg-slate-950">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl bg-eco-600 border border-eco-500 px-4 py-3.5 text-xs font-semibold text-white shadow-2xl animate-bounce">
+          <Check className="h-4 w-4" />
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Hero Banner Banner image */}
+      <div className="relative h-60 w-full overflow-hidden bg-slate-950">
+        <img
+          src={currentStore.banner || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1200'}
+          alt=""
+          className="h-full w-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+        
+        {/* Store description metadata overlay */}
+        <div className="absolute bottom-6 left-0 right-0">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end gap-4">
+            <div className="h-16 w-16 rounded-xl bg-slate-900 border border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center shadow-lg">
+              {currentStore.logo ? (
+                <img src={currentStore.logo} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-2xl font-bold text-white">{currentStore.name[0]}</span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none">{currentStore.name}</h1>
+              <p className="text-xs text-slate-300 mt-1.5 max-w-xl line-clamp-1">{currentStore.description || 'Welcome to our shop storefront.'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Catalog body */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        
+        {/* Filters and search controls */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-900 pb-6">
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-1.5 items-center">
+            <button
+              onClick={() => setSelectedCategory('')}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold border transition-all ${
+                selectedCategory === ''
+                  ? 'bg-eco-600 text-white border-eco-500 shadow-md shadow-eco-600/10'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+              }`}
+            >
+              All Items
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold border transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-eco-600 text-white border-eco-500 shadow-md shadow-eco-600/10'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Search input */}
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-900/50 border border-slate-850 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-eco-500"
+            />
+          </div>
+        </div>
+
+        {/* Product Grid */}
+        {productsLoading ? (
+          <div className="text-center text-slate-500 py-12">Loading products...</div>
+        ) : products.length === 0 ? (
+          <div className="text-center text-slate-500 py-16 border border-dashed border-slate-800 rounded-xl">
+            No products match your filters. Check back later!
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                storeSlug={storeSlug}
+                onQuickAdded={triggerToast}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
