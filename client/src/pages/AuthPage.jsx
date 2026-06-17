@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Sparkles, Building, User, Mail, Lock, AlertCircle, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Shield, 
+  Sparkles, 
+  Building, 
+  User, 
+  Mail, 
+  Lock, 
+  AlertCircle, 
+  ShoppingBag, 
+  ArrowRight, 
+  CreditCard, 
+  Check 
+} from 'lucide-react';
 import { loginUser, registerUser, clearAuthError } from '../store/slices/authSlice';
 import Logo from '../components/Logo';
 
@@ -18,13 +30,12 @@ export default function AuthPage() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, loading, error } = useSelector(state => state.auth);
 
-  // Clear errors on page switch
+  // Clear errors on page/tab switch
   useEffect(() => {
     dispatch(clearAuthError());
-  }, [isLogin, dispatch]);
+  }, [isLogin, role, dispatch]);
 
   // Handle redirects on success
   useEffect(() => {
@@ -70,154 +81,197 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-animated-gradient px-4 py-12 sm:px-6 lg:px-8">
-      {/* Decorative Blur Orbs */}
-      <div className="absolute top-20 left-20 h-72 w-72 rounded-full bg-brand-600/10 blur-3xl" />
-      <div className="absolute bottom-20 right-20 h-96 w-96 rounded-full bg-eco-600/10 blur-3xl" />
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16 sm:px-6 lg:px-8 overflow-hidden select-none">
+      
+      {/* Dynamic Animated Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-indigo-600/10 blur-[120px] animate-drift-slow pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] h-[60vw] w-[60vw] rounded-full bg-emerald-600/10 blur-[150px] animate-drift-slower pointer-events-none" />
 
-      {/* Main Container Card */}
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl glass-panel shadow-2xl md:grid-cols-12">
-        {/* Left Side: Brand Showcase */}
-        <div className="relative hidden flex-col justify-between p-10 md:col-span-5 md:flex bg-slate-900/40 border-r border-slate-800/50">
-          <div className="flex items-center gap-2">
-            <Logo className="h-8 w-8" />
-            <span className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-eco-400">
-              The Eco
+      {/* Main Glassmorphic Wrapper */}
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-900 bg-slate-950/40 backdrop-blur-2xl shadow-2xl md:grid-cols-12 relative z-10">
+        
+        {/* Left Column: Brand & Feature Highlights */}
+        <div className="relative hidden flex-col justify-between p-12 md:col-span-5 md:flex bg-slate-900/10 border-r border-slate-900/50 backdrop-blur-md">
+          {/* Logo Section */}
+          <div className="flex items-center gap-3">
+            <Logo className="h-9 w-9 text-indigo-400" />
+            <span className="text-2xl font-bold tracking-tight text-white">
+              The <span className="text-emerald-400">Eco</span>
             </span>
           </div>
 
-          <div className="my-auto space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300 border border-brand-500/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              Multi-Tenant E-Commerce
+          {/* Slogan and details */}
+          <div className="my-auto space-y-8">
+            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-400 border border-indigo-500/20">
+              <Sparkles className="h-4 w-4" />
+              SaaS Marketplace
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
-              One platform.<br />
-              Infinite storefronts.
-            </h1>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Launch your store, configure custom aesthetics, set product variants, and accept secure payments. Everything isolated, completely secure.
-            </p>
+            <div className="space-y-4">
+              <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
+                One Platform.<br />
+                Beautiful Eco Storefronts.
+              </h1>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Connect with local green brands or start your own digital storefront. Fully isolated databases, secure Stripe-powered transactions, and customized dashboards.
+              </p>
+            </div>
+
+            {/* Feature Checkpoints */}
+            <div className="space-y-3.5">
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <Shield className="h-3 w-3" />
+                </div>
+                <span>Strict Tenant Data Isolation</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <CreditCard className="h-3 w-3" />
+                </div>
+                <span>Stripe Payments in Indian Rupees (INR)</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-300">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <Sparkles className="h-3 w-3" />
+                </div>
+                <span>High-Fidelity Dashboard Metrics</span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-4 text-xs text-slate-500">
-            <span>Security Isolated</span>
+          {/* Footer security tag */}
+          <div className="flex gap-4 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+            <span>ISOLATED SYSTEM</span>
             <span>•</span>
-            <span>Stripe Secured</span>
+            <span>STRIPE SECURED</span>
           </div>
         </div>
 
-        {/* Right Side: Form controls */}
-        <div className="flex flex-col justify-center p-8 sm:p-12 md:col-span-7 bg-slate-950/40">
+        {/* Right Column: User Auth Actions */}
+        <div className="flex flex-col justify-center p-8 sm:p-12 md:col-span-7 bg-slate-950/20">
           <div className="w-full max-w-md mx-auto">
-            {/* Title / Toggle */}
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold tracking-tight text-white">
-                {isLogin ? 'Welcome back to The Eco' : 'Create your account'}
+            
+            {/* Title / Action Switcher */}
+            <div className="text-center md:text-left animate-slide-up">
+              <h2 className="text-3xl font-extrabold tracking-tight text-white">
+                {isLogin ? 'Sign In' : 'Join The Eco'}
               </h2>
-              <p className="mt-2 text-sm text-slate-400">
-                {isLogin ? "New to the platform? " : "Already have an account? "}
+              <p className="mt-2.5 text-xs text-slate-400">
+                {isLogin ? "Looking to create a storefront or buyer account? " : "Already have a registered account? "}
                 <button
                   type="button"
                   onClick={() => setIsLogin(!isLogin)}
-                  className="font-semibold text-brand-400 hover:text-brand-300 transition-colors"
+                  className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-4 decoration-indigo-500/40"
                 >
                   {isLogin ? 'Sign up here' : 'Log in here'}
                 </button>
               </p>
             </div>
 
-            {/* Error Message */}
+            {/* Error Message Box */}
             {error && (
-              <div className="mt-6 flex items-start gap-2.5 rounded-lg border border-red-500/20 bg-red-950/20 p-3.5 text-sm text-red-400">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-950/15 p-4 text-xs text-red-400 animate-slide-up">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {/* Main Interactive Form */}
+            <form onSubmit={handleSubmit} key={isLogin ? "signin-form" : "signup-form"} className="mt-8 space-y-5 animate-slide-up">
               {!isLogin && (
                 <>
-                  {/* Name field */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400">Full Name</label>
+                  {/* Full Name field */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name</label>
                     <div className="relative">
-                      <User className="absolute top-3 left-3 h-5 w-5 text-slate-500" />
+                      <User className="absolute top-3 left-3.5 h-4 w-4 text-slate-500" />
                       <input
                         type="text"
                         name="name"
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="glass-input w-full pl-10"
+                        className="glass-input w-full pl-10 text-xs py-3 bg-slate-900/30 border-slate-800/80 focus:border-indigo-500 focus:ring-indigo-500"
                         placeholder="John Doe"
                       />
                     </div>
                   </div>
 
-                  {/* Role Selector Tabs */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-400">Account Role</label>
-                    <div className="grid grid-cols-2 gap-2 p-1 bg-slate-900 border border-slate-800 rounded-lg">
-                      <button
-                        type="button"
+                  {/* Interactive Premium Role Selection Cards */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Account Type</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Customer Card */}
+                      <div 
                         onClick={() => setRole('Customer')}
-                        className={`flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-all ${
+                        className={`cursor-pointer rounded-xl border p-3.5 flex flex-col justify-between transition-all duration-300 ${
                           role === 'Customer'
-                            ? 'bg-brand-600 text-white shadow-md'
-                            : 'text-slate-400 hover:text-white'
+                            ? 'bg-indigo-600/10 border-indigo-500/60 shadow-md shadow-indigo-600/5 glow-border-brand'
+                            : 'bg-slate-900/20 border-slate-850 hover:border-slate-800'
                         }`}
                       >
-                        <User className="h-3.5 w-3.5" />
-                        Buyer / Customer
-                      </button>
-                      <button
-                        type="button"
+                        <div className="flex justify-between items-center">
+                          <User className={`h-4.5 w-4.5 ${role === 'Customer' ? 'text-indigo-400' : 'text-slate-500'}`} />
+                          {role === 'Customer' && <Check className="h-3.5 w-3.5 text-indigo-400" />}
+                        </div>
+                        <div className="mt-4">
+                          <p className="text-xs font-bold text-white">Buyer</p>
+                          <p className="text-[9px] text-slate-500 mt-0.5">Shop organic items</p>
+                        </div>
+                      </div>
+
+                      {/* Vendor Card */}
+                      <div 
                         onClick={() => setRole('Vendor')}
-                        className={`flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-all ${
+                        className={`cursor-pointer rounded-xl border p-3.5 flex flex-col justify-between transition-all duration-300 ${
                           role === 'Vendor'
-                            ? 'bg-eco-600 text-white shadow-md'
-                            : 'text-slate-400 hover:text-white'
+                            ? 'bg-emerald-600/10 border-emerald-500/60 shadow-md shadow-emerald-600/5 glow-border-eco'
+                            : 'bg-slate-900/20 border-slate-850 hover:border-slate-800'
                         }`}
                       >
-                        <Building className="h-3.5 w-3.5" />
-                        Merchant / Vendor
-                      </button>
+                        <div className="flex justify-between items-center">
+                          <Building className={`h-4.5 w-4.5 ${role === 'Vendor' ? 'text-emerald-400' : 'text-slate-500'}`} />
+                          {role === 'Vendor' && <Check className="h-3.5 w-3.5 text-emerald-400" />}
+                        </div>
+                        <div className="mt-4">
+                          <p className="text-xs font-bold text-white">Merchant</p>
+                          <p className="text-[9px] text-slate-500 mt-0.5">Sell sustainable items</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Store Name (Vendor Only) */}
+                  {/* Vendor Storefront Fields */}
                   {role === 'Vendor' && (
-                    <div className="space-y-4 p-4 rounded-lg border border-eco-500/20 bg-eco-950/10">
-                      <h4 className="text-xs font-bold text-eco-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <div className="space-y-4 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-950/5 animate-slide-up">
+                      <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-900 pb-2">
                         <ShoppingBag className="h-3.5 w-3.5" />
-                        Storefront Setup
+                        Create Storefront Profile
                       </h4>
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-400">Store Name</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Store Name</label>
                         <div className="relative">
-                          <Building className="absolute top-3 left-3 h-5 w-5 text-slate-500" />
+                          <Building className="absolute top-3 left-3.5 h-4 w-4 text-slate-500" />
                           <input
                             type="text"
                             name="storeName"
                             required={role === 'Vendor'}
                             value={formData.storeName}
                             onChange={handleChange}
-                            className="glass-input w-full pl-10"
-                            placeholder="e.g. Nike Sportswear"
+                            className="glass-input w-full pl-10 text-xs py-3 bg-slate-900/30 border-slate-800/80 focus:border-emerald-500 focus:ring-emerald-500"
+                            placeholder="e.g. Khadi Weaves"
                           />
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-400">Store Description</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Store Description</label>
                         <textarea
                           name="storeDescription"
                           value={formData.storeDescription}
                           onChange={handleChange}
                           rows={2}
-                          className="glass-input w-full py-2"
-                          placeholder="What do you sell?"
+                          className="glass-input w-full text-xs py-2.5 bg-slate-900/30 border-slate-800/80 focus:border-emerald-500 focus:ring-emerald-500"
+                          placeholder="Tell us what eco-friendly items you supply..."
                         />
                       </div>
                     </div>
@@ -226,34 +280,42 @@ export default function AuthPage() {
               )}
 
               {/* Email field */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400">Email Address</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute top-3 left-3 h-5 w-5 text-slate-500" />
+                  <Mail className="absolute top-3 left-3.5 h-4 w-4 text-slate-500" />
                   <input
                     type="email"
                     name="email"
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="glass-input w-full pl-10"
+                    className={`glass-input w-full pl-10 text-xs py-3 bg-slate-900/30 border-slate-800/80 focus:ring-1 ${
+                      !isLogin && role === 'Vendor' 
+                        ? 'focus:border-emerald-500 focus:ring-emerald-500' 
+                        : 'focus:border-indigo-500 focus:ring-indigo-500'
+                    }`}
                     placeholder="you@example.com"
                   />
                 </div>
               </div>
 
               {/* Password field */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-400">Password</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Password</label>
                 <div className="relative">
-                  <Lock className="absolute top-3 left-3 h-5 w-5 text-slate-500" />
+                  <Lock className="absolute top-3 left-3.5 h-4 w-4 text-slate-500" />
                   <input
                     type="password"
                     name="password"
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="glass-input w-full pl-10"
+                    className={`glass-input w-full pl-10 text-xs py-3 bg-slate-900/30 border-slate-800/80 focus:ring-1 ${
+                      !isLogin && role === 'Vendor' 
+                        ? 'focus:border-emerald-500 focus:ring-emerald-500' 
+                        : 'focus:border-indigo-500 focus:ring-indigo-500'
+                    }`}
                     placeholder="••••••••"
                   />
                 </div>
@@ -263,15 +325,18 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 active:scale-98 mt-6 ${
-                  isLogin
-                    ? 'bg-brand-600 hover:bg-brand-500 focus:ring-brand-500 shadow-brand-600/20'
+                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-white shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 active:scale-95 mt-6 hover:shadow-2xl ${
+                  loading
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    : isLogin
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 shadow-indigo-600/10'
                     : role === 'Vendor'
-                    ? 'bg-eco-600 hover:bg-eco-500 focus:ring-eco-500 shadow-eco-600/20'
-                    : 'bg-brand-600 hover:bg-brand-500 focus:ring-brand-500 shadow-brand-600/20'
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 shadow-emerald-600/10'
+                    : 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 shadow-indigo-600/10'
                 }`}
               >
-                {loading ? 'Processing request...' : isLogin ? 'Sign In' : 'Create Account'}
+                <span>{loading ? 'Processing Request...' : isLogin ? 'Sign In to Dashboard' : 'Complete Setup'}</span>
+                {!loading && <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />}
               </button>
             </form>
           </div>

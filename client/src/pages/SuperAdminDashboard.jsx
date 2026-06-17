@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Users, ShoppingBag, DollarSign, Building, AlertTriangle, CheckCircle, Ban, LogOut } from 'lucide-react';
+import { Shield, Users, ShoppingBag, IndianRupee, Building, AlertTriangle, CheckCircle, Ban, LogOut } from 'lucide-react';
 import { fetchStores, updateStoreStatus } from '../store/slices/storeSlice';
 import { logout } from '../store/slices/authSlice';
 import Logo from '../components/Logo';
@@ -101,10 +101,10 @@ export default function SuperAdminDashboard() {
             <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Platform GMV</span>
-                <DollarSign className="h-5 w-5 text-brand-400" />
+                <IndianRupee className="h-5 w-5 text-brand-400" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">${analytics?.platformRevenue?.toFixed(2) || '0.00'}</span>
+                <span className="text-2xl font-bold text-white">₹{analytics?.platformRevenue?.toFixed(2) || '0.00'}</span>
               </div>
             </div>
 

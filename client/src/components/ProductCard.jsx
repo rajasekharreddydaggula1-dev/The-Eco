@@ -82,7 +82,7 @@ export default function ProductCard({ product, storeSlug, onQuickAdded }) {
         <div className="mt-auto pt-4 flex items-center justify-between">
           <div>
             <span className="text-lg font-bold text-white">
-              ${product.price.toFixed(2)}
+              ₹{product.price.toFixed(2)}
             </span>
             {hasVariants && (
               <span className="block text-[10px] text-slate-500 font-medium">

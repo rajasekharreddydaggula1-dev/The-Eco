@@ -85,14 +85,14 @@ export default function CheckoutSuccess() {
                   {orderInfo.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center text-xs">
                       <span className="truncate max-w-[180px] text-slate-300">{item.name} {item.variantName ? `(${item.variantName})` : ''} x{item.quantity}</span>
-                      <span className="font-bold text-white">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-bold text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="flex justify-between border-t border-slate-900 pt-2 text-slate-200 font-bold">
                   <span>Grand Total Paid</span>
-                  <span className="text-eco-400 text-xs">${orderInfo.totalAmount.toFixed(2)}</span>
+                  <span className="text-eco-400 text-xs">₹{orderInfo.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             )}

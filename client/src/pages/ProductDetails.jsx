@@ -146,7 +146,7 @@ export default function ProductDetails() {
               {/* Title & Price */}
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{currentProduct.name}</h1>
-                <p className="text-2xl font-extrabold text-white mt-2">${currentPrice.toFixed(2)}</p>
+                <p className="text-2xl font-extrabold text-white mt-2">₹{currentPrice.toFixed(2)}</p>
               </div>
 
               {/* Description */}
@@ -173,7 +173,7 @@ export default function ProductDetails() {
                             : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
                         }`}
                       >
-                        {v.name} (${v.price.toFixed(2)})
+                        {v.name} (₹{v.price.toFixed(2)})
                       </button>
                     ))}
                   </div>

@@ -125,7 +125,7 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
                         <div>
                           <div className="flex justify-between text-sm font-semibold text-slate-100">
                             <h4>{item.name}</h4>
-                            <p className="ml-4">${(item.price * item.quantity).toFixed(2)}</p>
+                            <p className="ml-4">₹{(item.price * item.quantity).toFixed(2)}</p>
                           </div>
                           {item.variantName && (
                             <p className="mt-0.5 text-xs text-slate-500 font-medium">Variant: {item.variantName}</p>
@@ -224,7 +224,7 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
               <div className="border-t border-slate-800 bg-slate-900/20 px-4 py-6 sm:px-6">
                 <div className="flex justify-between text-base font-semibold text-slate-100">
                   <p>Subtotal</p>
-                  <p>${subtotal.toFixed(2)}</p>
+                  <p>₹{subtotal.toFixed(2)}</p>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">Shipping and taxes calculated at checkout.</p>
 

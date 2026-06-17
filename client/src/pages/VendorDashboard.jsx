@@ -296,7 +296,7 @@ export default function VendorDashboard() {
                 <div className="rounded-xl border border-slate-850 bg-slate-900/20 p-5">
                   <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Sales Revenue</span>
                   <div className="text-xl font-extrabold text-white mt-1">
-                    ${analytics?.metrics?.totalRevenue?.toFixed(2) || '0.00'}
+                    ₹{analytics?.metrics?.totalRevenue?.toFixed(2) || '0.00'}
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-850 bg-slate-900/20 p-5">
@@ -332,7 +332,7 @@ export default function VendorDashboard() {
                         <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
                         <YAxis stroke="#64748b" fontSize={10} />
                         <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }} />
-                        <Area type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" name="Sales ($)" />
+                        <Area type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" name="Sales (₹)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
@@ -357,7 +357,7 @@ export default function VendorDashboard() {
                             <span className="font-semibold text-slate-200 block text-xs truncate max-w-[150px]">{prod.name}</span>
                             <span className="text-[10px] text-slate-500">{prod.sold} units sold</span>
                           </div>
-                          <span className="font-bold text-eco-400">${prod.revenue.toFixed(2)}</span>
+                          <span className="font-bold text-eco-400">₹{prod.revenue.toFixed(2)}</span>
                         </div>
                       ))
                     )}
@@ -404,14 +404,14 @@ export default function VendorDashboard() {
                       <div>
                         <div className="flex justify-between items-start">
                           <span className="font-bold text-slate-200 text-sm">{prod.name}</span>
-                          <span className="text-xs font-mono text-eco-400 font-bold">${prod.price.toFixed(2)}</span>
+                          <span className="text-xs font-mono text-eco-400 font-bold">₹{prod.price.toFixed(2)}</span>
                         </div>
                         <p className="text-slate-400 mt-1 line-clamp-2 text-xs">{prod.description}</p>
                         
                         <div className="mt-3 flex flex-wrap gap-1">
                           {prod.variants.map((v, i) => (
                             <span key={i} className="bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-[9px] text-slate-400">
-                              {v.name} (${v.price})
+                              {v.name} (₹{v.price})
                             </span>
                           ))}
                         </div>
@@ -486,7 +486,7 @@ export default function VendorDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="font-bold text-white">${order.totalAmount.toFixed(2)}</span>
+                            <span className="font-bold text-white">₹{order.totalAmount.toFixed(2)}</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex rounded-full px-2 py-0.5 font-medium text-[9px] uppercase border ${
@@ -638,7 +638,7 @@ export default function VendorDashboard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400">Base Price ($)</label>
+                  <label className="text-xs text-slate-400">Base Price (₹)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -689,7 +689,7 @@ export default function VendorDashboard() {
                   <input
                     type="number"
                     step="0.01"
-                    placeholder="Price ($)"
+                    placeholder="Price (₹)"
                     value={newVariant.price}
                     onChange={(e) => setNewVariant({ ...newVariant, price: e.target.value })}
                     className="glass-input w-full text-[11px]"
@@ -715,7 +715,7 @@ export default function VendorDashboard() {
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {variantsList.map((variant, idx) => (
                     <div key={idx} className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-[10px] text-slate-400">
-                      <span>{variant.name} | ${variant.price} | Qty:{variant.stock}</span>
+                      <span>{variant.name} | ₹{variant.price} | Qty:{variant.stock}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveVariant(idx)}

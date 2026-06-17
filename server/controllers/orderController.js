@@ -80,7 +80,7 @@ exports.createCheckoutSession = async (req, res) => {
       // Prepare Stripe line items (Stripe expects amount in cents/subunit)
       stripeLineItems.push({
         price_data: {
-          currency: 'usd',
+          currency: 'inr',
           product_data: {
             name: `${product.name} ${item.variantName ? `(${item.variantName})` : ''}`,
             description: product.description.substring(0, 100)
