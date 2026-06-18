@@ -27,7 +27,8 @@ const seedData = async () => {
       email: 'admin@theeco.com',
       password: 'password123',
       role: 'Super Admin',
-      status: 'active'
+      status: 'active',
+      walletBalance: 10000
     });
     console.log('Super Admin account created: admin@theeco.com / password123');
 
@@ -37,15 +38,16 @@ const seedData = async () => {
       email: 'nike@theeco.com',
       password: 'password123',
       role: 'Vendor',
-      status: 'active'
+      status: 'active',
+      walletBalance: 5000
     });
 
     const store1 = await Store.create({
       name: 'Nike Store',
       slug: 'nike',
-      description: 'The official Nike Store. Just Do It.',
-      logo: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150',
-      banner: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1200&auto=format&fit=crop&q=80',
+      description: 'The official Nike Store. High performance sportswear with sustainable materials.',
+      logo: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=150',
+      banner: 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=1200&auto=format&fit=crop&q=80',
       vendor: vendor1._id,
       status: 'active'
     });
@@ -60,15 +62,16 @@ const seedData = async () => {
       email: 'foods@theeco.com',
       password: 'password123',
       role: 'Vendor',
-      status: 'active'
+      status: 'active',
+      walletBalance: 5000
     });
 
     const store2 = await Store.create({
       name: 'Eco Foods',
       slug: 'eco-foods',
       description: 'Your premium organic foods store. Direct from farm to table.',
-      logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=150',
-      banner: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&auto=format&fit=crop&q=80',
+      logo: 'https://images.unsplash.com/photo-1506306400032-ee15ef7d6e4d?w=150',
+      banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&auto=format&fit=crop&q=80',
       vendor: vendor2._id,
       status: 'active'
     });
@@ -83,14 +86,15 @@ const seedData = async () => {
       email: 'organic@theeco.com',
       password: 'password123',
       role: 'Vendor',
-      status: 'active'
+      status: 'active',
+      walletBalance: 5000
     });
 
     const store3 = await Store.create({
       name: 'Organic India',
       slug: 'organic-india',
       description: 'Authentic organic foods, herbal supplements, and wellness teas.',
-      logo: 'https://images.unsplash.com/photo-1515023115689-589c3f481c3d?w=150',
+      logo: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=150',
       banner: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&auto=format&fit=crop&q=80',
       vendor: vendor3._id,
       status: 'active'
@@ -106,14 +110,15 @@ const seedData = async () => {
       email: 'khadi@theeco.com',
       password: 'password123',
       role: 'Vendor',
-      status: 'active'
+      status: 'active',
+      walletBalance: 5000
     });
 
     const store4 = await Store.create({
       name: 'Khadi Naturals',
       slug: 'khadi-naturals',
       description: '100% certified organic cotton apparel, yoga items, and handwoven garments.',
-      logo: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=150',
+      logo: 'https://images.unsplash.com/photo-1582281229050-e25e14435864?w=150',
       banner: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=1200&auto=format&fit=crop&q=80',
       vendor: vendor4._id,
       status: 'active'
@@ -129,14 +134,15 @@ const seedData = async () => {
       email: 'clay@theeco.com',
       password: 'password123',
       role: 'Vendor',
-      status: 'active'
+      status: 'active',
+      walletBalance: 5000
     });
 
     const store5 = await Store.create({
       name: 'Clay & Earth',
       slug: 'clay-earth',
       description: 'Handcrafted terracotta, clay pots, and sustainable earthenware for your home.',
-      logo: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=150',
+      logo: 'https://images.unsplash.com/photo-1565192647048-f997ded879ab?w=150',
       banner: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=1200&auto=format&fit=crop&q=80',
       vendor: vendor5._id,
       status: 'active'
@@ -146,24 +152,102 @@ const seedData = async () => {
     await vendor5.save();
     console.log('Clay & Earth Vendor created: clay@theeco.com / password123 (slug: clay-earth)');
 
-    // 7. Create Customers
+    // === NEW STORES SEEDING ===
+
+    // 7. Create Vendor 6 (Green Tech)
+    const vendor6 = await User.create({
+      name: 'Alex Tech',
+      email: 'tech@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store6 = await Store.create({
+      name: 'Green Tech',
+      slug: 'green-tech',
+      description: 'Premium eco-friendly gadgets, solar chargers, and biodegradable tech accessories.',
+      logo: 'https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?w=150',
+      banner: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor6._id,
+      status: 'active'
+    });
+
+    vendor6.store = store6._id;
+    await vendor6.save();
+    console.log('Green Tech Vendor created: tech@theeco.com / password123 (slug: green-tech)');
+
+    // 8. Create Vendor 7 (Pure Bamboo)
+    const vendor7 = await User.create({
+      name: 'Bella Bamboo',
+      email: 'bamboo@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store7 = await Store.create({
+      name: 'Pure Bamboo',
+      slug: 'pure-bamboo',
+      description: 'Crafted bamboo furniture, kitchenware, toilet paper, and bio-degradable lifestyle products.',
+      logo: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=150',
+      banner: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor7._id,
+      status: 'active'
+    });
+
+    vendor7.store = store7._id;
+    await vendor7.save();
+    console.log('Pure Bamboo Vendor created: bamboo@theeco.com / password123 (slug: pure-bamboo)');
+
+    // 9. Create Vendor 8 (Herbal Garden)
+    const vendor8 = await User.create({
+      name: 'Emma Herbal',
+      email: 'herbal@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store8 = await Store.create({
+      name: 'Herbal Garden',
+      slug: 'herbal-garden',
+      description: 'Organic essential oils, natural skincare, and handmade soaps direct from nature.',
+      logo: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=150',
+      banner: 'https://images.unsplash.com/photo-1471017851983-fc49d89c59f2?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor8._id,
+      status: 'active'
+    });
+
+    vendor8.store = store8._id;
+    await vendor8.save();
+    console.log('Herbal Garden Vendor created: herbal@theeco.com / password123 (slug: herbal-garden)');
+
+    // 10. Create Customers
     const customer1 = await User.create({
       name: 'Alice Cooper',
       email: 'alice@theeco.com',
       password: 'password123',
       role: 'Customer',
-      status: 'active'
+      status: 'active',
+      walletBalance: 5000
     });
     const customer2 = await User.create({
       name: 'Bob Marley',
       email: 'bob@theeco.com',
       password: 'password123',
       role: 'Customer',
-      status: 'active'
+      status: 'active',
+      walletBalance: 7500
     });
-    console.log('Customers created: alice@theeco.com, bob@theeco.com');
+    console.log('Customers created: alice@theeco.com (Wallet: ₹5000), bob@theeco.com (Wallet: ₹7500)');
 
-    // 8. Seed Products for Nike Store
+    // === SEED PRODUCTS FOR STORES ===
+
+    // Store 1: Nike Store Products
     const nikeProduct1 = await Product.create({
       store: store1._id,
       name: 'Air Max Runner 90',
@@ -200,7 +284,7 @@ const seedData = async () => {
     });
     console.log('Nike products seeded.');
 
-    // 9. Seed Products for Eco Foods
+    // Store 2: Eco Foods Products
     const foodProduct1 = await Product.create({
       store: store2._id,
       name: 'Organic Honeycrisp Apples',
@@ -223,7 +307,7 @@ const seedData = async () => {
       description: '100% pure avocado oil perfect for high-heat cooking, roasting, or salad dressings.',
       price: 1250,
       images: [
-        'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600'
+        'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600'
       ],
       category: 'Pantry',
       stock: 40,
@@ -234,7 +318,7 @@ const seedData = async () => {
     });
     console.log('Eco Foods products seeded.');
 
-    // 10. Seed Products for Organic India
+    // Store 3: Organic India Products
     const organicProduct1 = await Product.create({
       store: store3._id,
       name: 'Organic Tulsi Green Tea',
@@ -284,7 +368,7 @@ const seedData = async () => {
     });
     console.log('Organic India products seeded.');
 
-    // 11. Seed Products for Khadi Naturals
+    // Store 4: Khadi Naturals Products
     const khadiProduct1 = await Product.create({
       store: store4._id,
       name: 'Handwoven Khadi Shirt',
@@ -333,7 +417,7 @@ const seedData = async () => {
     });
     console.log('Khadi Naturals products seeded.');
 
-    // 12. Seed Products for Clay & Earth
+    // Store 5: Clay & Earth Products
     const clayProduct1 = await Product.create({
       store: store5._id,
       name: 'Terracotta Water Jug',
@@ -382,7 +466,152 @@ const seedData = async () => {
     });
     console.log('Clay & Earth products seeded.');
 
-    // 13. Seed initial orders (using INR prices)
+    // Store 6: Green Tech Products
+    const techProduct1 = await Product.create({
+      store: store6._id,
+      name: 'Solar Power Bank',
+      description: 'Rugged, water-resistant 20,000mAh backup battery charged by solar energy. Built-in LED flashlight.',
+      price: 2499,
+      images: [
+        'https://images.unsplash.com/photo-1620288627223-53302f4e8c74?w=600'
+      ],
+      category: 'Electronics',
+      stock: 50,
+      variants: [
+        { name: 'Standard Edition', price: 2499, stock: 50 }
+      ]
+    });
+
+    const techProduct2 = await Product.create({
+      store: store6._id,
+      name: 'Biodegradable Phone Case',
+      description: '100% compostable and zero-waste protective case for iPhone and Android. Made from flax straw.',
+      price: 899,
+      images: [
+        'https://images.unsplash.com/photo-1605335960017-d2e85ab55ec1?w=600'
+      ],
+      category: 'Accessories',
+      stock: 120,
+      variants: [
+        { name: 'Matte Forest Green', price: 899, stock: 60 },
+        { name: 'Matte Charcoal Black', price: 899, stock: 60 }
+      ]
+    });
+
+    const techProduct3 = await Product.create({
+      store: store6._id,
+      name: 'Bamboo Bluetooth Speaker',
+      description: 'Portable wireless speaker made from sustainable natural bamboo. Deep bass and crystal-clear sound.',
+      price: 3299,
+      images: [
+        'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600'
+      ],
+      category: 'Electronics',
+      stock: 30,
+      variants: [
+        { name: 'Wood Finish', price: 3299, stock: 30 }
+      ]
+    });
+    console.log('Green Tech products seeded.');
+
+    // Store 7: Pure Bamboo Products
+    const bambooProduct1 = await Product.create({
+      store: store7._id,
+      name: 'Bamboo Cutlery Set',
+      description: 'Reusable organic bamboo fork, knife, spoon, and straw in a travel cotton pouch. Zero plastic.',
+      price: 499,
+      images: [
+        'https://images.unsplash.com/photo-1584346133934-a3afd2a33c4c?w=600'
+      ],
+      category: 'Kitchenware',
+      stock: 150,
+      variants: [
+        { name: 'Single Set', price: 499, stock: 100 },
+        { name: 'Family Pack of 4', price: 1699, stock: 50 }
+      ]
+    });
+
+    const bambooProduct2 = await Product.create({
+      store: store7._id,
+      name: 'Organic Bamboo Sheets',
+      description: 'Luxuriously soft, cooling, and hypoallergenic bed sheets made from 100% bamboo viscose.',
+      price: 2999,
+      images: [
+        'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600'
+      ],
+      category: 'Bedding',
+      stock: 40,
+      variants: [
+        { name: 'Queen Size', price: 2999, stock: 20 },
+        { name: 'King Size', price: 3499, stock: 20 }
+      ]
+    });
+
+    const bambooProduct3 = await Product.create({
+      store: store7._id,
+      name: 'Bamboo Toothbrushes (Pack of 4)',
+      description: 'Biodegradable bamboo toothbrushes with charcoal-infused soft bristles. Clean teeth, clean oceans.',
+      price: 299,
+      images: [
+        'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600'
+      ],
+      category: 'Personal Care',
+      stock: 200,
+      variants: [
+        { name: 'Family Pack', price: 299, stock: 200 }
+      ]
+    });
+    console.log('Pure Bamboo products seeded.');
+
+    // Store 8: Herbal Garden Products
+    const herbalProduct1 = await Product.create({
+      store: store8._id,
+      name: 'Lavender Essential Oil',
+      description: '100% pure therapeutic grade lavender oil. Promotes relaxation, calm sleep, and skin soothing.',
+      price: 599,
+      images: [
+        'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600'
+      ],
+      category: 'Wellness',
+      stock: 75,
+      variants: [
+        { name: '10ml Bottle', price: 599, stock: 50 },
+        { name: '30ml Bottle', price: 1299, stock: 25 }
+      ]
+    });
+
+    const herbalProduct2 = await Product.create({
+      store: store8._id,
+      name: 'Charcoal Handmade Soap',
+      description: 'Natural detoxifying soap bar made with activated charcoal and organic coconut oil. Unscented.',
+      price: 199,
+      images: [
+        'https://images.unsplash.com/photo-1607006342411-9a336f7de18a?w=600'
+      ],
+      category: 'Skincare',
+      stock: 100,
+      variants: [
+        { name: '100g Bar', price: 199, stock: 100 }
+      ]
+    });
+
+    const herbalProduct3 = await Product.create({
+      store: store8._id,
+      name: 'Organic Aloe Vera Gel',
+      description: '99% pure aloe vera gel directly extracted from plants. Soothes sunburn, hydrates hair and dry skin.',
+      price: 349,
+      images: [
+        'https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=600'
+      ],
+      category: 'Skincare',
+      stock: 80,
+      variants: [
+        { name: '150ml Tube', price: 349, stock: 80 }
+      ]
+    });
+    console.log('Herbal Garden products seeded.');
+
+    // 11. Seed initial orders (using INR prices)
     await Order.create({
       store: store1._id,
       customer: customer1._id,

@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'suspended'],
     default: 'active'
   },
+  walletBalance: {
+    type: Number,
+    default: 5000
+  },
   createdAt: {
     type: Date,
     default: Date.now

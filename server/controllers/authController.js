@@ -80,7 +80,8 @@ exports.register = async (req, res) => {
         email: user.email,
         role: user.role,
         store: user.store,
-        status: user.status
+        status: user.status,
+        walletBalance: user.walletBalance
       }
     });
   } catch (error) {
@@ -135,6 +136,7 @@ exports.login = async (req, res) => {
         role: user.role,
         store: user.store,
         status: user.status,
+        walletBalance: user.walletBalance,
         storeDetails
       }
     });
@@ -152,6 +154,34 @@ exports.getMe = async (req, res) => {
     res.status(200).json({
       success: true,
       user
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Recharge User Wallet
+// @route   POST /api/auth/wallet/recharge
+// @access  Private
+exports.rechargeWallet = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid recharge amount' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.walletBalance = (user.walletBalance || 0) + Number(amount);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully recharged ₹${amount}`,
+      walletBalance: user.walletBalance
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

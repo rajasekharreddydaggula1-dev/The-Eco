@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { handleResponse } from '../../utils/api';
+import { updateWalletBalance } from './authSlice';
 
 // Thunks
 export const checkoutCart = createAsyncThunk(
   'orders/checkout',
-  async ({ items, shippingAddress, tenantId }, { getState, rejectWithValue }) => {
+  async ({ items, shippingAddress, tenantId, paymentMethod, paymentDetails }, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
       const response = await fetch('/api/orders/checkout', {
@@ -14,7 +15,7 @@ export const checkoutCart = createAsyncThunk(
           'Authorization': `Bearer ${token}`,
           'x-tenant-id': tenantId
         },
-        body: JSON.stringify({ items, shippingAddress })
+        body: JSON.stringify({ items, shippingAddress, paymentMethod, paymentDetails })
       });
       return await handleResponse(response);
     } catch (e) {
@@ -37,6 +38,52 @@ export const confirmMockPayment = createAsyncThunk(
         body: JSON.stringify({ sessionId })
       });
       return await handleResponse(response);
+    } catch (e) {
+      return rejectWithValue(e.message);
+    }
+  }
+);
+
+export const cancelOrder = createAsyncThunk(
+  'orders/cancel',
+  async ({ id }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await fetch(`/api/orders/${id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await handleResponse(response);
+      if (data.walletBalance !== undefined) {
+        dispatch(updateWalletBalance(data.walletBalance));
+      }
+      return data.order;
+    } catch (e) {
+      return rejectWithValue(e.message);
+    }
+  }
+);
+
+export const returnOrder = createAsyncThunk(
+  'orders/return',
+  async ({ id }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await fetch(`/api/orders/${id}/return`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await handleResponse(response);
+      if (data.walletBalance !== undefined) {
+        dispatch(updateWalletBalance(data.walletBalance));
+      }
+      return data.order;
     } catch (e) {
       return rejectWithValue(e.message);
     }
@@ -141,6 +188,18 @@ const orderSlice = createSlice({
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.orders = state.orders.map(order => 
           order._id === action.payload.id ? { ...order, status: action.payload.status } : order
+        );
+      })
+      // Cancel Order
+      .addCase(cancelOrder.fulfilled, (state, action) => {
+        state.orders = state.orders.map(order => 
+          order._id === action.payload._id ? action.payload : order
+        );
+      })
+      // Return Order
+      .addCase(returnOrder.fulfilled, (state, action) => {
+        state.orders = state.orders.map(order => 
+          order._id === action.payload._id ? action.payload : order
         );
       });
   }

@@ -12,7 +12,9 @@ import {
   ShoppingBag, 
   ArrowRight, 
   CreditCard, 
-  Check 
+  Check,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { loginUser, registerUser, clearAuthError } from '../store/slices/authSlice';
 import Logo from '../components/Logo';
@@ -31,6 +33,8 @@ export default function AuthPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading, error } = useSelector(state => state.auth);
+  
+  const [showPassword, setShowPassword] = useState(false);
 
   // Clear errors on page/tab switch
   useEffect(() => {
@@ -306,18 +310,25 @@ export default function AuthPage() {
                 <div className="relative">
                   <Lock className="absolute top-3 left-3.5 h-4 w-4 text-slate-500" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className={`glass-input w-full pl-10 text-xs py-3 bg-slate-900/30 border-slate-800/80 focus:ring-1 ${
+                    className={`glass-input w-full pl-10 pr-10 text-xs py-3 bg-slate-900/30 border-slate-800/80 focus:ring-1 ${
                       !isLogin && role === 'Vendor' 
                         ? 'focus:border-emerald-500 focus:ring-emerald-500' 
                         : 'focus:border-indigo-500 focus:ring-indigo-500'
                     }`}
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 

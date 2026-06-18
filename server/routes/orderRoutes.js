@@ -4,7 +4,9 @@ const {
   createCheckoutSession,
   confirmMockPayment,
   getOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  cancelOrder,
+  returnOrder
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 const { resolveTenant, requireTenant } = require('../middleware/tenant');
@@ -20,5 +22,11 @@ router.get('/', protect, getOrders);
 
 // Update order status (Vendor/Admin)
 router.put('/:id/status', protect, authorize('Vendor', 'Super Admin'), updateOrderStatus);
+
+// Cancel order (Customer)
+router.post('/:id/cancel', protect, authorize('Customer'), cancelOrder);
+
+// Return order (Customer)
+router.post('/:id/return', protect, authorize('Customer'), returnOrder);
 
 module.exports = router;

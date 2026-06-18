@@ -1,14 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { X, Trash2, Plus, Minus, CreditCard, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Trash2, Plus, Minus, CreditCard, ShoppingBag, ArrowRight, ArrowLeft, Send, Landmark, ShieldCheck, Wallet, ChevronRight } from 'lucide-react';
 import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
 import { checkoutCart } from '../store/slices/orderSlice';
+import { rechargeWallet } from '../store/slices/authSlice';
 
 export default function CartDrawer({ isOpen, onClose, storeId }) {
   const dispatch = useDispatch();
-  const cartData = useSelector(state => state.cart.carts[storeId] || []);
+  const cartCarts = useSelector(state => state.cart.carts);
+  const { stores } = useSelector(state => state.stores);
   const { checkoutLoading, error } = useSelector(state => state.orders);
   const { user } = useSelector(state => state.auth);
+
+  // Determine active carts
+  const activeStoreIds = Object.keys(cartCarts).filter(id => cartCarts[id] && cartCarts[id].length > 0);
+
+  // Local state for active store context inside drawer
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
+
+  // Sync passed storeId
+  useEffect(() => {
+    if (storeId && cartCarts[storeId] && cartCarts[storeId].length > 0) {
+      setSelectedStoreId(storeId);
+    } else if (activeStoreIds.length === 1) {
+      // Auto-select if only one active cart
+      setSelectedStoreId(activeStoreIds[0]);
+    } else {
+      setSelectedStoreId(null);
+    }
+  }, [storeId, isOpen, cartCarts]);
+
+  // Checkout Steps: 'cart', 'shipping', 'payment'
+  const [step, setStep] = useState('cart');
+  const [paymentMethod, setPaymentMethod] = useState('Wallet');
+
+  // Reset steps on open/close
+  useEffect(() => {
+    setStep('cart');
+    setValidationError('');
+  }, [isOpen, selectedStoreId]);
 
   // Shipping details state
   const [shipping, setShipping] = useState({
@@ -16,22 +46,75 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
     city: '',
     state: '',
     postalCode: '',
-    country: 'US'
+    country: 'IN'
   });
 
-  const [validationError, setValidationError] = useState('');
+  // Simulated details for payment methods
+  const [upiId, setUpiId] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [selectedBank, setSelectedBank] = useState('State Bank of India');
 
+  const [validationError, setValidationError] = useState('');
+  const [loadingLocal, setLoadingLocal] = useState(false);
+
+  // Resolve cart data for selected store
+  const cartData = selectedStoreId ? (cartCarts[selectedStoreId] || []) : [];
   const subtotal = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  // Get Store Metadata (name, logo) from redux
+  const getStoreMeta = (sId) => {
+    return stores.find(s => s._id === sId) || { name: 'Merchant Partner', logo: '', slug: '' };
+  };
+
   const handleQtyChange = (productId, variantName, newQty) => {
-    dispatch(updateQuantity({ storeId, productId, variantName, quantity: newQty }));
+    if (!selectedStoreId) return;
+    dispatch(updateQuantity({ storeId: selectedStoreId, productId, variantName, quantity: newQty }));
   };
 
   const handleRemove = (productId, variantName) => {
-    dispatch(removeFromCart({ storeId, productId, variantName }));
+    if (!selectedStoreId) return;
+    dispatch(removeFromCart({ storeId: selectedStoreId, productId, variantName }));
   };
 
-  const handleCheckout = async (e) => {
+  const validateAddress = () => {
+    if (!shipping.street || !shipping.city || !shipping.state || !shipping.postalCode) {
+      setValidationError('Please fill out all shipping fields.');
+      return false;
+    }
+    setValidationError('');
+    return true;
+  };
+
+  const handleProceedToPayment = () => {
+    if (validateAddress()) {
+      setStep('payment');
+    }
+  };
+
+  const executeCheckout = async (chosenMethod, details) => {
+    const itemsPayload = cartData.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      variantName: item.variantName
+    }));
+
+    const result = await dispatch(checkoutCart({
+      items: itemsPayload,
+      shippingAddress: shipping,
+      tenantId: selectedStoreId,
+      paymentMethod: chosenMethod,
+      paymentDetails: details
+    }));
+
+    if (checkoutCart.fulfilled.match(result)) {
+      const { url } = result.payload;
+      window.location.href = url;
+    }
+  };
+
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setValidationError('');
 
@@ -45,34 +128,65 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
       return;
     }
 
-    if (!shipping.street || !shipping.city || !shipping.state || !shipping.postalCode) {
-      setValidationError('Please fill out all shipping fields.');
-      return;
+    // Validation per payment method
+    let details = {};
+    if (paymentMethod === 'Wallet') {
+      const balance = user.walletBalance || 0;
+      if (balance < subtotal) {
+        setValidationError('Insufficient wallet balance. Please recharge or use another method.');
+        return;
+      }
+      details = { transactionId: `WT-${Date.now()}` };
+    } else if (paymentMethod === 'UPI') {
+      if (!upiId || !upiId.includes('@')) {
+        setValidationError('Please enter a valid UPI ID (e.g. user@okaxis).');
+        return;
+      }
+      details = { upiId };
+    } else if (paymentMethod === 'Card') {
+      if (!cardNumber || cardNumber.length < 16 || !cardExpiry || !cardCvv) {
+        setValidationError('Please complete all Credit/Debit card fields.');
+        return;
+      }
+      details = { cardLast4: cardNumber.slice(-4) };
+    } else if (paymentMethod === 'Net Banking') {
+      details = { bankName: selectedBank };
+    } else if (paymentMethod === 'COD') {
+      details = { codCollected: false };
     }
 
-    const itemsPayload = cartData.map(item => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      variantName: item.variantName
-    }));
+    await executeCheckout(paymentMethod, details);
+  };
 
-    const result = await dispatch(checkoutCart({
-      items: itemsPayload,
-      shippingAddress: shipping,
-      tenantId: storeId
-    }));
+  // Top Up Wallet deficit and complete checkout instantly
+  const handleTopUpAndPay = async () => {
+    setValidationError('');
+    const deficit = subtotal - (user.walletBalance || 0);
+    if (deficit <= 0) return;
 
-    if (checkoutCart.fulfilled.match(result)) {
-      const { url } = result.payload;
-      // Redirect to Stripe Checkout or Mock checkout success path
-      window.location.href = url;
+    setLoadingLocal(true);
+    try {
+      const rechargeResult = await dispatch(rechargeWallet({ amount: deficit }));
+      if (rechargeWallet.fulfilled.match(rechargeResult)) {
+        await executeCheckout('Wallet', { transactionId: `WT-${Date.now()}` });
+      } else {
+        setValidationError('Failed to top up wallet. Please try again.');
+      }
+    } catch (err) {
+      setValidationError('Error processing wallet top-up.');
+      console.error(err);
+    } finally {
+      setLoadingLocal(false);
     }
   };
 
   if (!isOpen) return null;
 
+  const userBalance = user?.walletBalance || 0;
+  const isWalletInsufficient = userBalance < subtotal;
+
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden text-xs">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs transition-opacity" 
@@ -82,11 +196,21 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
       <div className="absolute inset-y-0 right-0 flex max-w-full pl-10">
         <div className="w-screen max-w-md transform transition-all duration-300">
           <div className="flex h-full flex-col border-l border-slate-800 bg-slate-950/90 shadow-2xl backdrop-blur-md">
+            
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-800 px-4 py-6 sm:px-6">
               <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5 text-eco-500" />
-                Shopping Cart
+                {step === 'cart' && selectedStoreId && activeStoreIds.length > 1 && (
+                  <ArrowLeft className="h-5 w-5 text-slate-400 cursor-pointer" onClick={() => setSelectedStoreId(null)} />
+                )}
+                {step === 'shipping' && (
+                  <ArrowLeft className="h-5 w-5 text-slate-400 cursor-pointer" onClick={() => setStep('cart')} />
+                )}
+                {step === 'payment' && (
+                  <ArrowLeft className="h-5 w-5 text-slate-400 cursor-pointer" onClick={() => setStep('shipping')} />
+                )}
+                
+                {!selectedStoreId ? 'Select a Store Cart' : getStoreMeta(selectedStoreId).name}
               </h2>
               <button
                 type="button"
@@ -97,120 +221,335 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
               </button>
             </div>
 
-            {/* Cart Items List */}
+            {/* Content Body */}
             <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-              {cartData.length === 0 ? (
+              {activeStoreIds.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <div className="rounded-full bg-slate-900 p-6 text-slate-600 mb-4 border border-slate-800">
                     <ShoppingBag className="h-10 w-10" />
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-300">Your cart is empty</h3>
-                  <p className="mt-1 text-xs text-slate-500">Add products to your cart to checkout.</p>
+                  <h3 className="text-sm font-semibold text-slate-300 font-display">Your cart is empty</h3>
+                  <p className="mt-1 text-slate-500">Go to any of our seeded storefronts and select items to purchase.</p>
+                </div>
+              ) : !selectedStoreId ? (
+                /* MULTI-TENANT CART SELECTOR */
+                <div className="space-y-4">
+                  <p className="text-slate-400 leading-normal mb-6">You have active items in multiple store carts. Please select a merchant to view your items and check out:</p>
+                  
+                  <div className="space-y-3">
+                    {activeStoreIds.map(sId => {
+                      const meta = getStoreMeta(sId);
+                      const items = cartCarts[sId] || [];
+                      const count = items.reduce((s, i) => s + i.quantity, 0);
+                      const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+                      
+                      return (
+                        <div 
+                          key={sId}
+                          onClick={() => setSelectedStoreId(sId)}
+                          className="flex items-center justify-between p-4 rounded-xl border border-slate-900 bg-slate-900/30 hover:bg-slate-900/60 hover:border-brand-500/30 cursor-pointer transition-all"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center flex-shrink-0">
+                              {meta.logo ? (
+                                <img src={meta.logo} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                <span className="font-bold text-white">{meta.name[0]}</span>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-white text-sm">{meta.name}</h4>
+                              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">{count} item{count > 1 ? 's' : ''} in cart</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-eco-400">₹{total.toFixed(2)}</span>
+                            <ChevronRight className="h-4 w-4 text-slate-500" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
+                /* SINGLE STORE CART VIEW (WITH WIZARD STEPS) */
                 <div className="space-y-6">
-                  {cartData.map((item, idx) => (
-                    <div key={`${item.productId}-${item.variantName}-${idx}`} className="flex items-start gap-4 border-b border-slate-900 pb-4">
-                      {/* Thumbnail */}
-                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
-                        <img
-                          src={item.image || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=150'}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex flex-1 flex-col">
-                        <div>
-                          <div className="flex justify-between text-sm font-semibold text-slate-100">
-                            <h4>{item.name}</h4>
-                            <p className="ml-4">₹{(item.price * item.quantity).toFixed(2)}</p>
+                  {/* STEP 1: CART LIST */}
+                  {step === 'cart' && (
+                    <div className="space-y-4">
+                      {cartData.map((item, idx) => (
+                        <div key={`${item.productId}-${item.variantName}-${idx}`} className="flex items-start gap-4 border-b border-slate-900 pb-4">
+                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
+                            <img
+                              src={item.image || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=150'}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
+                            />
                           </div>
-                          {item.variantName && (
-                            <p className="mt-0.5 text-xs text-slate-500 font-medium">Variant: {item.variantName}</p>
-                          )}
+                          <div className="flex flex-1 flex-col">
+                            <div>
+                              <div className="flex justify-between text-sm font-semibold text-slate-100">
+                                <h4>{item.name}</h4>
+                                <p className="ml-4">₹{(item.price * item.quantity).toFixed(2)}</p>
+                              </div>
+                              {item.variantName && (
+                                <p className="mt-0.5 text-slate-500 font-medium">Variant: {item.variantName}</p>
+                              )}
+                            </div>
+                            <div className="flex flex-1 items-end justify-between pt-2">
+                              <div className="flex items-center gap-1 border border-slate-850 rounded bg-slate-900 px-1.5 py-0.5">
+                                <button
+                                  onClick={() => handleQtyChange(item.productId, item.variantName, item.quantity - 1)}
+                                  className="text-slate-400 hover:text-white p-0.5"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span className="text-xs font-semibold px-2 text-slate-200">{item.quantity}</span>
+                                <button
+                                  onClick={() => handleQtyChange(item.productId, item.variantName, item.quantity + 1)}
+                                  className="text-slate-400 hover:text-white p-0.5"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </div>
+                              <button
+                                onClick={() => handleRemove(item.productId, item.variantName)}
+                                className="text-slate-600 hover:text-red-400 p-1 transition-colors"
+                                title="Remove item"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex flex-1 items-end justify-between pt-2">
-                          {/* Quantity selector */}
-                          <div className="flex items-center gap-1 border border-slate-850 rounded bg-slate-900 px-1.5 py-0.5">
-                            <button
-                              onClick={() => handleQtyChange(item.productId, item.variantName, item.quantity - 1)}
-                              className="text-slate-400 hover:text-white p-0.5"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="text-xs font-semibold px-2 text-slate-200">{item.quantity}</span>
-                            <button
-                              onClick={() => handleQtyChange(item.productId, item.variantName, item.quantity + 1)}
-                              className="text-slate-400 hover:text-white p-0.5"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          </div>
+                      ))}
+                    </div>
+                  )}
 
-                          {/* Delete */}
-                          <button
-                            onClick={() => handleRemove(item.productId, item.variantName)}
-                            className="text-slate-600 hover:text-red-400 p-1 transition-colors"
-                            title="Remove item"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                  {/* STEP 2: SHIPPING FORM */}
+                  {step === 'shipping' && (
+                    <div className="space-y-4">
+                      <p className="text-slate-450 leading-normal mb-2">Enter the delivery details for your order. Scoped to the current store tenant.</p>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Street Address</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 789 Lotus Blvd"
+                            value={shipping.street}
+                            onChange={(e) => setShipping({ ...shipping, street: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[9px] uppercase font-bold text-slate-500 block mb-1">City</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Mumbai"
+                              value={shipping.city}
+                              onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] uppercase font-bold text-slate-500 block mb-1">State</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Maharashtra"
+                              value={shipping.state}
+                              onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Postal Code</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 400001"
+                              value={shipping.postalCode}
+                              onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Country</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. India"
+                              value={shipping.country}
+                              onChange={(e) => setShipping({ ...shipping, country: e.target.value })}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )}
 
-                  {/* Shipping Address fields */}
-                  {user && user.role === 'Customer' && (
-                    <div className="pt-4 border-t border-slate-850">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Shipping Address</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="col-span-2">
-                          <input
-                            type="text"
-                            placeholder="Street Address"
-                            value={shipping.street}
-                            onChange={(e) => setShipping({ ...shipping, street: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-white focus:outline-none focus:border-brand-500"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="City"
-                            value={shipping.city}
-                            onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-white focus:outline-none focus:border-brand-500"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="State"
-                            value={shipping.state}
-                            onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-white focus:outline-none focus:border-brand-500"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Postal Code"
-                            value={shipping.postalCode}
-                            onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-white focus:outline-none focus:border-brand-500"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Country"
-                            value={shipping.country}
-                            onChange={(e) => setShipping({ ...shipping, country: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-2 text-white focus:outline-none focus:border-brand-500"
-                          />
+                  {/* STEP 3: PAYMENT METHOD FORM */}
+                  {step === 'payment' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2.5">
+                        <label className="text-xs font-bold text-slate-455 uppercase tracking-wider block">Choose Payment Mode</label>
+                        
+                        <div className="space-y-2">
+                          {/* Wallet Option */}
+                          <label className={`flex flex-col gap-1 rounded-xl border p-3 cursor-pointer transition-all ${
+                            paymentMethod === 'Wallet' 
+                              ? 'bg-brand-900/10 border-brand-500' 
+                              : 'bg-slate-900/30 border-slate-900 hover:border-slate-850'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="payment"
+                                checked={paymentMethod === 'Wallet'}
+                                onChange={() => setPaymentMethod('Wallet')}
+                                className="accent-brand-500 h-4 w-4"
+                              />
+                              <Wallet className="h-4 w-4 text-brand-400" />
+                              <span className="text-xs font-bold text-slate-100">Eco Wallet Balance</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 pl-6">
+                              Balance: <strong className={isWalletInsufficient ? 'text-red-400' : 'text-eco-400'}>₹{userBalance.toFixed(2)}</strong>
+                            </span>
+                          </label>
+
+                          {/* UPI Option */}
+                          <label className={`flex flex-col gap-2 rounded-xl border p-3 cursor-pointer transition-all ${
+                            paymentMethod === 'UPI' 
+                              ? 'bg-brand-900/10 border-brand-500' 
+                              : 'bg-slate-900/30 border-slate-900 hover:border-slate-850'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="payment"
+                                checked={paymentMethod === 'UPI'}
+                                onChange={() => setPaymentMethod('UPI')}
+                                className="accent-brand-500 h-4 w-4"
+                              />
+                              <Send className="h-4 w-4 text-brand-400" />
+                              <span className="text-xs font-bold text-slate-100">BHIM UPI / GPAY</span>
+                            </div>
+                            {paymentMethod === 'UPI' && (
+                              <div className="pl-6 pt-1 animate-slide-up">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. user@okaxis"
+                                  value={upiId}
+                                  onChange={(e) => setUpiId(e.target.value)}
+                                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-brand-500"
+                                />
+                              </div>
+                            )}
+                          </label>
+
+                          {/* Credit/Debit Card Option */}
+                          <label className={`flex flex-col gap-2 rounded-xl border p-3 cursor-pointer transition-all ${
+                            paymentMethod === 'Card' 
+                              ? 'bg-brand-900/10 border-brand-500' 
+                              : 'bg-slate-900/30 border-slate-900 hover:border-slate-850'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="payment"
+                                checked={paymentMethod === 'Card'}
+                                onChange={() => setPaymentMethod('Card')}
+                                className="accent-brand-500 h-4 w-4"
+                              />
+                              <CreditCard className="h-4 w-4 text-brand-400" />
+                              <span className="text-xs font-bold text-slate-100">Credit / Debit Card</span>
+                            </div>
+                            {paymentMethod === 'Card' && (
+                              <div className="pl-6 space-y-2 pt-1 animate-slide-up">
+                                <input
+                                  type="text"
+                                  maxLength="16"
+                                  placeholder="Card Number (16 Digits)"
+                                  value={cardNumber}
+                                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
+                                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-brand-500"
+                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="MM/YY"
+                                    value={cardExpiry}
+                                    onChange={(e) => setCardExpiry(e.target.value)}
+                                    className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-brand-500"
+                                  />
+                                  <input
+                                    type="password"
+                                    maxLength="3"
+                                    placeholder="CVV"
+                                    value={cardCvv}
+                                    onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                                    className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-brand-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </label>
+
+                          {/* Net Banking Option */}
+                          <label className={`flex flex-col gap-2 rounded-xl border p-3 cursor-pointer transition-all ${
+                            paymentMethod === 'Net Banking' 
+                              ? 'bg-brand-900/10 border-brand-500' 
+                              : 'bg-slate-900/30 border-slate-900 hover:border-slate-850'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="payment"
+                                checked={paymentMethod === 'Net Banking'}
+                                onChange={() => setPaymentMethod('Net Banking')}
+                                className="accent-brand-500 h-4 w-4"
+                              />
+                              <Landmark className="h-4 w-4 text-brand-400" />
+                              <span className="text-xs font-bold text-slate-100">Net Banking</span>
+                            </div>
+                            {paymentMethod === 'Net Banking' && (
+                              <div className="pl-6 pt-1 animate-slide-up">
+                                <select
+                                  value={selectedBank}
+                                  onChange={(e) => setSelectedBank(e.target.value)}
+                                  className="w-full bg-slate-955 border border-slate-800 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-brand-500"
+                                >
+                                  <option>State Bank of India</option>
+                                  <option>HDFC Bank</option>
+                                  <option>ICICI Bank</option>
+                                  <option>Axis Bank</option>
+                                </select>
+                              </div>
+                            )}
+                          </label>
+
+                          {/* Cash On Delivery Option */}
+                          <label className={`flex flex-col gap-1 rounded-xl border p-3 cursor-pointer transition-all ${
+                            paymentMethod === 'COD' 
+                              ? 'bg-brand-900/10 border-brand-500' 
+                              : 'bg-slate-900/30 border-slate-900 hover:border-slate-850'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="payment"
+                                checked={paymentMethod === 'COD'}
+                                onChange={() => setPaymentMethod('COD')}
+                                className="accent-brand-500 h-4 w-4"
+                              />
+                              <ShieldCheck className="h-4 w-4 text-brand-400" />
+                              <span className="text-xs font-bold text-slate-100">Cash on Delivery (COD)</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 pl-6">Pay at your doorstep.</span>
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -220,54 +559,74 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
             </div>
 
             {/* Footer */}
-            {cartData.length > 0 && (
+            {selectedStoreId && cartData.length > 0 && (
               <div className="border-t border-slate-800 bg-slate-900/20 px-4 py-6 sm:px-6">
                 <div className="flex justify-between text-base font-semibold text-slate-100">
                   <p>Subtotal</p>
                   <p>₹{subtotal.toFixed(2)}</p>
                 </div>
-                <p className="mt-0.5 text-xs text-slate-500">Shipping and taxes calculated at checkout.</p>
+                <p className="mt-0.5 text-slate-500 text-[10px]">Taxes and delivery shipping invoiced at checkout.</p>
 
                 {validationError && (
-                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-xs text-red-400">
+                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-red-400 font-bold">
                     {validationError}
                   </div>
                 )}
 
                 {error && (
-                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-xs text-red-400">
+                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-red-400 font-bold">
                     {error}
                   </div>
                 )}
 
-                <div className="mt-6">
-                  <button
-                    disabled={checkoutLoading}
-                    onClick={handleCheckout}
-                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-eco-600 hover:bg-eco-500 disabled:bg-slate-800 disabled:text-slate-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-eco-600/20 transition-all active:scale-[0.98]"
-                  >
-                    {checkoutLoading ? (
-                      <span>Redirecting to payment...</span>
-                    ) : (
-                      <>
-                        <CreditCard className="h-4 w-4" />
-                        Proceed to Checkout
-                        <ArrowRight className="h-4 w-4" />
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="mt-4 flex justify-center text-center text-xs">
-                  <p className="text-slate-500">
-                    or{' '}
+                <div className="mt-6 flex flex-col gap-2">
+                  {/* Cart View Controls */}
+                  {step === 'cart' && (
                     <button
-                      type="button"
-                      className="font-medium text-eco-400 hover:text-eco-300 transition-colors"
-                      onClick={onClose}
+                      onClick={() => {
+                        if (!user) setValidationError('Please login as a Customer to check out.');
+                        else setStep('shipping');
+                      }}
+                      className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand-600 hover:bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] cursor-pointer"
                     >
-                      Continue Shopping
+                      Proceed to Checkout
+                      <ArrowRight className="h-4 w-4" />
                     </button>
-                  </p>
+                  )}
+
+                  {/* Shipping Address Controls */}
+                  {step === 'shipping' && (
+                    <button
+                      onClick={handleProceedToPayment}
+                      className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand-600 hover:bg-brand-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                    >
+                      Proceed to Payment
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  {/* Payment Selection Controls */}
+                  {step === 'payment' && (
+                    <>
+                      {paymentMethod === 'Wallet' && isWalletInsufficient ? (
+                        <button
+                          disabled={loadingLocal || checkoutLoading}
+                          onClick={handleTopUpAndPay}
+                          className="w-full flex items-center justify-center gap-2 rounded-lg bg-eco-600 hover:bg-eco-500 disabled:bg-slate-800 disabled:text-slate-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                        >
+                          {loadingLocal ? 'Processing top-up...' : `Top-up ₹${(subtotal - userBalance).toFixed(2)} & Pay`}
+                        </button>
+                      ) : (
+                        <button
+                          disabled={checkoutLoading || loadingLocal}
+                          onClick={handlePlaceOrder}
+                          className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand-600 hover:bg-brand-500 disabled:bg-slate-800 disabled:text-slate-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                        >
+                          {checkoutLoading ? 'Placing Order...' : 'Pay & Place Order'}
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}

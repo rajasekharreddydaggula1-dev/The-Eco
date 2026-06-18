@@ -44,8 +44,17 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled', 'returned'],
     default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['Stripe', 'Wallet', 'UPI', 'Card', 'Net Banking', 'COD'],
+    default: 'Stripe'
+  },
+  paymentDetails: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   },
   stripeSessionId: {
     type: String,

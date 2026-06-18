@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Store = require('../models/Store');
+const User = require('../models/User');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key');
 
 // Helper to deduct product stock
@@ -28,7 +29,7 @@ const deductStock = async (items) => {
 // @access  Private (Customer)
 exports.createCheckoutSession = async (req, res) => {
   try {
-    const { items, shippingAddress } = req.body;
+    const { items, shippingAddress, paymentMethod, paymentDetails } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Cart is empty' });
@@ -106,6 +107,71 @@ exports.createCheckoutSession = async (req, res) => {
         country: 'US'
       }
     });
+
+    const chosenMethod = paymentMethod || 'Stripe';
+
+    if (chosenMethod !== 'Stripe') {
+      order.paymentMethod = chosenMethod;
+
+      if (chosenMethod === 'Wallet') {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+          await Order.findByIdAndDelete(order._id);
+          return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        if (user.walletBalance < totalAmount) {
+          await Order.findByIdAndDelete(order._id);
+          return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+        }
+        user.walletBalance -= totalAmount;
+        await user.save();
+
+        const mockSessionId = `mock_wallet_${Date.now()}_${order._id}`;
+        order.stripeSessionId = mockSessionId;
+        order.status = 'paid';
+        order.paymentDetails = { transactionId: `WT-${Date.now()}` };
+        await order.save();
+
+        await deductStock(order.items);
+
+        return res.status(200).json({
+          success: true,
+          mock: true,
+          url: `/checkout-success?session_id=${mockSessionId}&payment_method=Wallet`
+        });
+      }
+
+      if (chosenMethod === 'COD') {
+        const mockSessionId = `mock_cod_${Date.now()}_${order._id}`;
+        order.stripeSessionId = mockSessionId;
+        order.status = 'pending';
+        order.paymentDetails = { codCollected: false };
+        await order.save();
+
+        await deductStock(order.items);
+
+        return res.status(200).json({
+          success: true,
+          mock: true,
+          url: `/checkout-success?session_id=${mockSessionId}&payment_method=COD`
+        });
+      }
+
+      // Card, UPI, Net Banking
+      const mockSessionId = `mock_${chosenMethod.toLowerCase().replace(' ', '_')}_${Date.now()}_${order._id}`;
+      order.stripeSessionId = mockSessionId;
+      order.status = 'paid';
+      order.paymentDetails = paymentDetails || {};
+      await order.save();
+
+      await deductStock(order.items);
+
+      return res.status(200).json({
+        success: true,
+        mock: true,
+        url: `/checkout-success?session_id=${mockSessionId}&payment_method=${encodeURIComponent(chosenMethod)}`
+      });
+    }
 
     const isStripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock_key';
 
@@ -196,7 +262,7 @@ exports.stripeWebhook = async (req, res) => {
     }
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    return res.status(400).json({ success: false, message: `Webhook Error: ${err.message}` });
   }
 
   // Handle the checkout.session.completed event
@@ -214,13 +280,13 @@ exports.stripeWebhook = async (req, res) => {
         await deductStock(order.items);
 
         // Fetch customer email
-        const user = await Product.model('User').findById(order.customer);
+        const user = await User.findById(order.customer);
         const customerEmail = user ? user.email : 'customer@theeco.com';
         console.log(`[EMAIL LOGGER] To: ${customerEmail} - Order ${order._id} marked as Paid. Thank you!`);
       }
     } catch (dbErr) {
       console.error(`Failed to update order on webhook: ${dbErr.message}`);
-      return res.status(500).send(`Database error: ${dbErr.message}`);
+      return res.status(500).json({ success: false, message: `Database error: ${dbErr.message}` });
     }
   }
 
@@ -272,7 +338,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     const { status } = req.body;
-    if (!['pending', 'paid', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+    if (!['pending', 'paid', 'shipped', 'delivered', 'cancelled', 'returned'].includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid order status' });
     }
 
@@ -280,6 +346,81 @@ exports.updateOrderStatus = async (req, res) => {
     await order.save();
 
     res.status(200).json({ success: true, message: `Order status updated to ${status}`, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Cancel customer order (refund if paid)
+// @route   POST /api/orders/:id/cancel
+// @access  Private (Customer)
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.customer.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
+    }
+
+    if (['shipped', 'delivered', 'cancelled', 'returned'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Cannot cancel an order that is already ${order.status}` });
+    }
+
+    const previousStatus = order.status;
+    order.status = 'cancelled';
+    await order.save();
+
+    // Refund if payment was completed
+    if (previousStatus === 'paid') {
+      req.user.walletBalance = (req.user.walletBalance || 0) + order.totalAmount;
+      await req.user.save();
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Order cancelled successfully', 
+      order,
+      walletBalance: req.user.walletBalance 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Return customer order (refund)
+// @route   POST /api/orders/:id/return
+// @access  Private (Customer)
+exports.returnOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.customer.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to return this order' });
+    }
+
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
+    }
+
+    order.status = 'returned';
+    await order.save();
+
+    // Refund the amount to the customer's wallet
+    req.user.walletBalance = (req.user.walletBalance || 0) + order.totalAmount;
+    await req.user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Order return requested and refunded successfully', 
+      order,
+      walletBalance: req.user.walletBalance 
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

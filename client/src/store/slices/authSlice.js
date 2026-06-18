@@ -71,6 +71,26 @@ export const getProfile = createAsyncThunk(
   }
 );
 
+export const rechargeWallet = createAsyncThunk(
+  'auth/rechargeWallet',
+  async ({ amount }, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const response = await fetch('/api/auth/wallet/recharge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount })
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: getInitialState(),
@@ -84,6 +104,12 @@ const authSlice = createSlice({
     },
     clearAuthError: (state) => {
       state.error = null;
+    },
+    updateWalletBalance: (state, action) => {
+      if (state.user) {
+        state.user.walletBalance = action.payload;
+        localStorage.setItem('eco_user', JSON.stringify(state.user));
+      }
     }
   },
   extraReducers: (builder) => {
@@ -130,13 +156,28 @@ const authSlice = createSlice({
             role: action.payload.role,
             store: action.payload.store ? action.payload.store._id : null,
             status: action.payload.status,
-            storeDetails: action.payload.store
+            storeDetails: action.payload.store,
+            walletBalance: action.payload.walletBalance
           };
+          localStorage.setItem('eco_user', JSON.stringify(state.user));
+        }
+      })
+      .addCase(getProfile.rejected, (state, action) => {
+        state.user = null;
+        state.token = null;
+        state.error = action.payload;
+        localStorage.removeItem('eco_token');
+        localStorage.removeItem('eco_user');
+      })
+      // Recharge Wallet
+      .addCase(rechargeWallet.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.walletBalance = action.payload.walletBalance;
           localStorage.setItem('eco_user', JSON.stringify(state.user));
         }
       });
   }
 });
 
-export const { logout, clearAuthError } = authSlice.actions;
+export const { logout, clearAuthError, updateWalletBalance } = authSlice.actions;
 export default authSlice.reducer;

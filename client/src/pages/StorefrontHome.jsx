@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, Search, Sparkles, Building, ChevronRight, Check } from 'lucide-react';
 import { fetchStores, fetchStoreBySlug } from '../store/slices/storeSlice';
 import { fetchProducts } from '../store/slices/productSlice';
@@ -13,9 +13,17 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
   const { stores, currentStore, loading: storeLoading } = useSelector(state => state.stores);
   const { products, loading: productsLoading } = useSelector(state => state.products);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamTerm = searchParams.get('search') || '';
+
+  const [searchTerm, setSearchTerm] = useState(searchParamTerm);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+
+  // Sync searchParamTerm to state
+  useEffect(() => {
+    setSearchTerm(searchParamTerm);
+  }, [searchParamTerm]);
 
   // 1. Load Stores List if at root, or Load Specific Store details if storeSlug is present
   useEffect(() => {
@@ -225,7 +233,10 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
               type="text"
               placeholder="Search products..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setSearchParams({ search: e.target.value });
+              }}
               className="w-full bg-slate-900/50 border border-slate-850 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-eco-500"
             />
           </div>

@@ -22,7 +22,7 @@ export default function CheckoutSuccess() {
       }
 
       try {
-        if (sessionId.startsWith('mock_session_')) {
+        if (sessionId.startsWith('mock_')) {
           // Verify simulation payment on the server
           const result = await dispatch(confirmMockPayment({ sessionId }));
           if (confirmMockPayment.fulfilled.match(result)) {

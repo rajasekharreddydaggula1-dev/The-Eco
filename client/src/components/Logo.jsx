@@ -3,8 +3,8 @@ import React from 'react';
 export default function Logo({ className = "h-8 w-8" }) {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
-      {/* Glow Effect behind the logo */}
-      <div className="absolute inset-0 bg-eco-500/20 blur-md rounded-full" />
+      {/* Background glow shadow */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-brand-500/20 to-eco-500/20 blur-md rounded-xl" />
       
       {/* SVG Icon */}
       <svg
@@ -14,52 +14,48 @@ export default function Logo({ className = "h-8 w-8" }) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#4ade80" />
-            <stop offset="50%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#8b5cf6" />
+          <linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#8b5cf6" /> {/* Indigo / Purple */}
+            <stop offset="50%" stopColor="#4f46e5" />
+            <stop offset="100%" stopColor="#22c55e" /> {/* Eco green */}
+          </linearGradient>
+          <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#a78bfa" />
+            <stop offset="100%" stopColor="#4ade80" />
           </linearGradient>
         </defs>
-        
-        {/* Outer Ring */}
-        <circle
-          cx="16"
-          cy="16"
-          r="14"
-          className="stroke-[1.5]"
-          stroke="url(#logoGrad)"
-          strokeDasharray="4 2"
-        />
-        
-        {/* Abstract Geometric Leaf */}
+
+        {/* Shopping Bag Handle */}
         <path
-          d="M16 6C16 6 10 13 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 13 16 6 16 6Z"
-          fill="url(#logoGrad)"
-          fillOpacity="0.15"
-          stroke="url(#logoGrad)"
-          strokeWidth="2"
+          d="M11 10C11 7.23858 13.2386 5 16 5C18.7614 5 21 7.23858 21 10"
+          stroke="url(#handleGrad)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+
+        {/* Shopping Bag Body */}
+        <path
+          d="M7 11C7 9.89543 7.89543 9 9 9H23C24.1046 9 25 9.89543 25 11L27 25C27 26.6569 25.6569 28 24 28H8C6.34315 28 5 26.6569 5 25L7 11Z"
+          fill="url(#bagGrad)"
+          stroke="url(#handleGrad)"
+          strokeWidth="1.5"
           strokeLinejoin="round"
         />
-        
-        {/* Inner Rib */}
+
+        {/* Stylized Inner Leaf (Checkmark) to symbolize Eco Commerce */}
         <path
-          d="M16 24V11"
-          stroke="url(#logoGrad)"
+          d="M12 19L15 22L21 15"
+          stroke="#ffffff"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Decorative smile/arrow representing fulfillment under the bag */}
+        <path
+          d="M9 25C13 28 19 28 23 25"
+          stroke="url(#handleGrad)"
           strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        
-        {/* Side leaf veins */}
-        <path
-          d="M16 18L19.5 15.5"
-          stroke="url(#logoGrad)"
-          strokeWidth="1"
-          strokeLinecap="round"
-        />
-        <path
-          d="M16 15L12.5 12.5"
-          stroke="url(#logoGrad)"
-          strokeWidth="1"
           strokeLinecap="round"
         />
       </svg>
