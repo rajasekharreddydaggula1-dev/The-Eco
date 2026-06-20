@@ -1,0 +1,26 @@
+{
+  "name": "the-eco",
+  "version": "1.0.0",
+  "description": "**The Eco** is a multi-tenant MERN stack (MongoDB, Express, React, Node) e-commerce application designed for sustainable, organic, and eco-friendly products. It features tenant-level isolation, unified authentication, Stripe payment integration in Indian Rupees (INR), and roles for Super Admins, Vendors, and Customers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajasekharreddydaggula1-dev/The-Eco.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rajasekharreddydaggula1-dev/The-Eco/issues"
+  },
+  "homepage": "https://github.com/rajasekharreddydaggula1-dev/The-Eco#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
