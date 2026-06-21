@@ -1,24 +1,38 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { handleResponse } from '../../utils/api';
 import { updateWalletBalance } from './authSlice';
+import { clearCart } from './cartSlice';
 
 // Thunks
 export const checkoutCart = createAsyncThunk(
   'orders/checkout',
-  async ({ items, shippingAddress, tenantId, paymentMethod, paymentDetails }, { getState, rejectWithValue }) => {
+  async ({ items, shippingAddress, tenantId, paymentMethod, paymentDetails }, { getState, dispatch, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      
+      if (tenantId) {
+        headers['x-tenant-id'] = tenantId;
+      } else if (typeof window !== 'undefined' && window.location) {
+        const match = window.location.pathname.match(/\/store\/([^/]+)/);
+        if (match && match[1]) {
+          headers['x-tenant-slug'] = match[1];
+        }
+      }
+
       const response = await fetch('/api/orders/checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'x-tenant-id': tenantId
-        },
+        headers,
         body: JSON.stringify({ items, shippingAddress, paymentMethod, paymentDetails })
       });
       return await handleResponse(response);
     } catch (e) {
+      if (e.message && e.message.includes('not found in the database') && tenantId) {
+        dispatch(clearCart({ storeId: tenantId }));
+      }
       return rejectWithValue(e.message);
     }
   }

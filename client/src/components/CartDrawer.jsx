@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { X, Trash2, Plus, Minus, CreditCard, ShoppingBag, ArrowRight, ArrowLeft, Send, Landmark, ShieldCheck, Wallet, ChevronRight } from 'lucide-react';
-import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
-import { checkoutCart } from '../store/slices/orderSlice';
+import { removeFromCart, updateQuantity, clearCart } from '../store/slices/cartSlice';
+import { checkoutCart, resetCheckout } from '../store/slices/orderSlice';
 import { rechargeWallet } from '../store/slices/authSlice';
 
 export default function CartDrawer({ isOpen, onClose, storeId }) {
@@ -38,7 +38,8 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
   useEffect(() => {
     setStep('cart');
     setValidationError('');
-  }, [isOpen, selectedStoreId]);
+    dispatch(resetCheckout());
+  }, [isOpen, selectedStoreId, dispatch]);
 
   // Shipping details state
   const [shipping, setShipping] = useState({
@@ -574,8 +575,20 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
                 )}
 
                 {error && (
-                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-red-400 font-bold">
-                    {error}
+                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-red-400 font-bold flex flex-col items-center justify-center gap-2">
+                    <span>{error}</span>
+                    {error.includes('not found in the database') && selectedStoreId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          dispatch(clearCart({ storeId: selectedStoreId }));
+                          dispatch(resetCheckout());
+                        }}
+                        className="mt-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 px-3.5 py-2 text-xs text-red-300 transition-all font-semibold cursor-pointer shadow-sm hover:shadow-red-500/10"
+                      >
+                        Clear Cart for This Store
+                      </button>
+                    )}
                   </div>
                 )}
 

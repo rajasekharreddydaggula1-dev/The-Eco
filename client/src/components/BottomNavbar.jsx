@@ -10,7 +10,7 @@ export default function BottomNavbar({
   cartCount = 0 
 }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-900 bg-slate-950/95 backdrop-blur-lg md:hidden">
+    <div className="fixed top-16 left-0 right-0 z-40 border-b border-slate-900 bg-slate-950/95 backdrop-blur-lg md:hidden">
       <div className="flex h-16 items-center justify-around px-2">
         {/* Home */}
         <button

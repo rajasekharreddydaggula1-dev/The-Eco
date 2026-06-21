@@ -13,6 +13,13 @@ connectDB();
 
 const app = express();
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.url} - x-tenant-id: ${req.headers['x-tenant-id']}, x-tenant-slug: ${req.headers['x-tenant-slug']}`);
+  next();
+});
+
+
 // Enable CORS
 app.use(cors({
   origin: (origin, callback) => {

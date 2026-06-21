@@ -4,7 +4,17 @@ import { handleResponse } from '../../utils/api';
 const getTenantHeaders = ({ tenantId, tenantSlug }) => {
   const headers = {};
   if (tenantId) headers['x-tenant-id'] = tenantId;
-  if (tenantSlug) headers['x-tenant-slug'] = tenantSlug;
+  
+  // Resolve tenant slug from passed args, or fallback to parsing from window.location.pathname
+  let slug = tenantSlug;
+  if (!tenantId && !slug && typeof window !== 'undefined' && window.location) {
+    const match = window.location.pathname.match(/\/store\/([^/]+)/);
+    if (match && match[1]) {
+      slug = match[1];
+    }
+  }
+  
+  if (slug) headers['x-tenant-slug'] = slug;
   return headers;
 };
 

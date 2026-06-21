@@ -24,7 +24,7 @@ function AppContent() {
 
   const { currentStore } = useSelector(state => state.stores);
   const cartCarts = useSelector(state => state.cart.carts);
-  const { user } = useSelector(state => state.auth);
+  const { user, loading } = useSelector(state => state.auth);
 
   const [cartOpen, setCartOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
@@ -36,6 +36,16 @@ function AppContent() {
     dispatch(getProfile());
   }, [dispatch]);
 
+  // Redirect to /auth if user is not logged in and not on /auth page
+  useEffect(() => {
+    const token = localStorage.getItem('eco_token');
+    if (!token && !user && location.pathname !== '/auth') {
+      navigate('/auth');
+    } else if (token && !user && !loading && location.pathname !== '/auth') {
+      navigate('/auth');
+    }
+  }, [user, loading, location.pathname, navigate]);
+
   // Determine cart items and count globally across all stores
   const activeStoreId = currentStore?._id;
   const cartCount = Object.keys(cartCarts).reduce((sum, sId) => {
@@ -43,8 +53,8 @@ function AppContent() {
     return sum + cart.reduce((s, item) => s + item.quantity, 0);
   }, 0);
 
-  // Suppress default navbar on Auth and Dashboards
-  const showNavbar = !['/auth', '/dashboard', '/admin'].includes(location.pathname);
+  // Suppress default navbar on Auth and Dashboards, or if user is not logged in
+  const showNavbar = user && !['/auth', '/dashboard', '/admin'].includes(location.pathname);
 
   const handleHomeClick = () => {
     navigate('/');
@@ -59,7 +69,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between pb-16 md:pb-0">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
       {showNavbar && (
         <Navbar 
           onCartClick={() => setCartOpen(true)} 
@@ -73,7 +83,7 @@ function AppContent() {
         />
       )}
 
-      <main className="flex-1">
+      <main className={`flex-1 ${showNavbar ? 'pt-16 md:pt-0' : ''}`}>
         <Routes>
           {/* Marketplace Directory */}
           <Route path="/" element={<StorefrontHome />} />
