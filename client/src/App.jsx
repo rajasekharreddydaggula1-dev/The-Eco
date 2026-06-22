@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Navbar from './components/Navbar';
-import BottomNavbar from './components/BottomNavbar';
 import CartDrawer from './components/CartDrawer';
 import WalletModal from './components/WalletModal';
 import VoiceAssistant from './components/VoiceAssistant';
@@ -83,7 +82,7 @@ function AppContent() {
         />
       )}
 
-      <main className={`flex-1 ${showNavbar ? 'pt-16 md:pt-0' : ''}`}>
+      <main className="flex-1">
         <Routes>
           {/* Marketplace Directory */}
           <Route path="/" element={<StorefrontHome />} />
@@ -141,20 +140,7 @@ function AppContent() {
         onClose={() => setCameraOpen(false)}
       />
 
-      {/* Bottom Navigation for Mobile Screens */}
-      {showNavbar && (
-        <BottomNavbar
-          onCartClick={() => setCartOpen(true)}
-          onWalletClick={() => {
-            if (!user) navigate('/auth');
-            else setWalletOpen(true);
-          }}
-          onMenuClick={() => setVoiceOpen(true)}
-          onYouClick={handleYouClick}
-          onHomeClick={handleHomeClick}
-          cartCount={cartCount}
-        />
-      )}
+
 
       {/* Shared Platform Footer */}
       {showNavbar && (
