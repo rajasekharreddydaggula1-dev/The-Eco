@@ -136,6 +136,9 @@ const productSlice = createSlice({
   reducers: {
     clearCurrentProduct: (state) => {
       state.currentProduct = null;
+    },
+    clearProducts: (state) => {
+      state.products = [];
     }
   },
   extraReducers: (builder) => {
@@ -187,5 +190,5 @@ const productSlice = createSlice({
   }
 });
 
-export const { clearCurrentProduct } = productSlice.actions;
+export const { clearCurrentProduct, clearProducts } = productSlice.actions;
 export default productSlice.reducer;

@@ -68,11 +68,14 @@ export default function AuthPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isLogin) {
-      dispatch(loginUser({ email: formData.email, password: formData.password }));
+      dispatch(loginUser({ 
+        email: formData.email.trim().toLowerCase(), 
+        password: formData.password 
+      }));
     } else {
       const payload = {
         name: formData.name,
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role
       };

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, Search, Sparkles, Building, ChevronRight, Check } from 'lucide-react';
-import { fetchStores, fetchStoreBySlug } from '../store/slices/storeSlice';
-import { fetchProducts } from '../store/slices/productSlice';
+import { fetchStores, fetchStoreBySlug, clearCurrentStore } from '../store/slices/storeSlice';
+import { fetchProducts, clearProducts } from '../store/slices/productSlice';
 import ProductCard from '../components/ProductCard';
 
 export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
@@ -27,24 +27,35 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
 
   // 1. Load Stores List if at root, or Load Specific Store details if storeSlug is present
   useEffect(() => {
+    dispatch(clearProducts());
+    dispatch(clearCurrentStore());
+    setSelectedCategory('');
+    setSearchTerm('');
+
     if (!storeSlug) {
       dispatch(fetchStores());
+      localStorage.removeItem('last_visited_store');
     } else {
       dispatch(fetchStoreBySlug(storeSlug));
       localStorage.setItem('last_visited_store', storeSlug);
     }
+
+    return () => {
+      dispatch(clearProducts());
+      dispatch(clearCurrentStore());
+    };
   }, [storeSlug, dispatch]);
 
-  // 2. Load Products when Store is resolved
+  // 2. Load Products in parallel using storeSlug
   useEffect(() => {
-    if (storeSlug && currentStore) {
+    if (storeSlug) {
       dispatch(fetchProducts({ 
-        tenantId: currentStore._id, 
+        tenantSlug: storeSlug, 
         search: searchTerm, 
         category: selectedCategory 
       }));
     }
-  }, [storeSlug, currentStore, searchTerm, selectedCategory, dispatch]);
+  }, [storeSlug, searchTerm, selectedCategory, dispatch]);
 
   const triggerToast = (productName) => {
     setToastMessage(`Added ${productName} to your cart!`);
@@ -54,23 +65,27 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
   // Render ROOT general directory listing all stores
   if (!storeSlug) {
     return (
-      <div className="relative min-h-screen bg-animated-gradient py-12">
-        {/* Decorative blur */}
-        <div className="absolute top-10 left-10 h-72 w-72 rounded-full bg-brand-600/10 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-eco-600/10 blur-3xl" />
+      <div className="relative min-h-screen bg-animated-gradient py-16 overflow-hidden">
+        {/* Dot grid pattern overlay */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
+        {/* Decorative blur glows */}
+        <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-brand-500/10 blur-[100px] animate-drift-slow" />
+        <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-eco-500/10 blur-[120px] animate-drift-slower" />
+        <div className="absolute top-10 right-10 h-72 w-72 rounded-full bg-eco-400/5 blur-[90px]" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
           {/* Hero Header */}
-          <div className="text-center max-w-2xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300 border border-brand-500/20">
-              <Sparkles className="h-3.5 w-3.5" />
+          <div className="text-center max-w-2xl mx-auto space-y-6 animate-slide-up">
+            <div className="inline-flex items-center gap-2 rounded-full bg-eco-500/10 px-4.5 py-1.5 text-xs font-semibold text-eco-400 border border-eco-500/20 shadow-sm backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-brand-400 animate-pulse" />
               SaaS Multi-Tenant Ecosystem
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl leading-tight">
+            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl leading-tight">
               Explore Storefronts on <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-eco-400">The Eco</span>
             </h1>
-            <p className="text-sm text-slate-400">
-              A comprehensive marketplace powered by database partitioning. Enter any of our independent merchant storefronts below to browse and purchase items securely.
+            <p className="text-sm sm:text-base text-slate-400/90 leading-relaxed">
+              A premium marketplace powered by database partitioning. Enter any of our independent merchant storefronts below to browse and purchase items securely.
             </p>
           </div>
 
@@ -78,32 +93,37 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
           {storeLoading ? (
             <div className="text-center text-slate-500 py-12">Loading marketplace storefronts...</div>
           ) : stores.length === 0 ? (
-            <div className="text-center text-slate-500 py-12 border border-dashed border-slate-800 rounded-xl max-w-md mx-auto">
+            <div className="text-center text-slate-500 py-16 border border-dashed border-slate-800 rounded-2xl max-w-md mx-auto bg-slate-950/40 backdrop-blur-md">
               No storefronts are currently registered. Register as a Merchant/Vendor on the login page to launch a storefront!
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
               {stores.map((store) => (
                 <Link
                   key={store._id}
                   to={`/store/${store.slug}`}
-                  className="group block rounded-2xl glass-panel glass-panel-hover overflow-hidden"
+                  className="group block rounded-2xl glass-panel glass-panel-hover overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:ring-1 hover:ring-eco-400/20"
                 >
                   {/* Banner */}
-                  <div className="h-32 w-full bg-slate-950 overflow-hidden relative">
+                  <div className="h-36 w-full bg-slate-950 overflow-hidden relative">
                     <img
                       src={store.banner || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=600'}
                       alt=""
-                      className="h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
+                    
+                    {/* Active Partner Tag */}
+                    <span className="absolute top-4 right-4 rounded-full bg-eco-950/80 backdrop-blur-md px-3 py-1 text-[9px] font-bold tracking-wider text-eco-400 uppercase border border-eco-500/20">
+                      Active Partner
+                    </span>
                   </div>
 
                   {/* Store Details */}
-                  <div className="p-6 relative -mt-8 flex flex-col justify-between min-h-[150px]">
+                  <div className="p-6 relative -mt-8 flex flex-col justify-between min-h-[160px] bg-slate-950/50 backdrop-blur-md">
                     <div className="flex items-start gap-4">
                       {/* Logo */}
-                      <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center shadow-lg">
+                      <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex-shrink-0 flex items-center justify-center shadow-lg transition-transform group-hover:scale-105 duration-300">
                         {store.logo ? (
                           <img src={store.logo} alt="" className="h-full w-full object-cover" />
                         ) : (
@@ -111,10 +131,10 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-white group-hover:text-eco-400 transition-colors truncate">
+                        <h3 className="text-base font-bold text-white group-hover:text-brand-400 transition-colors truncate">
                           {store.name}
                         </h3>
-                        <p className="text-[10px] text-slate-400 font-mono tracking-tight mt-0.5">/store/{store.slug}</p>
+                        <p className="text-[10px] text-slate-500 font-mono tracking-tight mt-0.5">/store/{store.slug}</p>
                       </div>
                     </div>
 
@@ -122,9 +142,9 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
                       {store.description || 'No store description provided by vendor.'}
                     </p>
 
-                    <div className="mt-4 pt-4 border-t border-slate-900 flex justify-between items-center text-xs font-semibold text-brand-300">
+                    <div className="mt-5 pt-4 border-t border-slate-900 flex justify-between items-center text-xs font-bold text-eco-400 group-hover:text-brand-400 transition-colors">
                       <span>Browse Products</span>
-                      <ChevronRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
+                      <ChevronRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1 duration-300" />
                     </div>
                   </div>
                 </Link>

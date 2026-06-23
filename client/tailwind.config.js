@@ -9,28 +9,54 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6', // Violet Accent
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          950: '#2e1065',
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b', // Refined Warm Gold Accent
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+          950: '#451a03',
         },
         eco: {
           50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e', // Emerald Accent
-          600: '#16a34a',
-          700: '#15803d',
-          850: '#14532d',
+          100: '#e6fcf0',
+          200: '#c2f9dd',
+          300: '#86f3ba',
+          400: '#34d399', // Mint Green
+          500: '#10b981', // Emerald/Mint Accent
+          600: '#059669',
+          700: '#047857',
+          850: '#064e3b',
+        },
+        forest: {
+          50: '#f4f9f7',
+          100: '#e5f3ee',
+          200: '#cce6dc',
+          300: '#a3d1c0',
+          400: '#72b59e',
+          500: '#4f967d',
+          600: '#3c7963',
+          700: '#316250',
+          800: '#284f42',
+          900: '#1b342b',
+          950: '#06120e', // Deep Forest Base
+        },
+        slate: {
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94c0b1', // Tinted light green-slate
+          500: '#64748b',
+          600: '#475569',
+          700: '#1b4537', // Custom deep green-slate
+          800: '#123328', // Custom deep green-slate
+          900: '#0b241c', // Custom deep green-slate
+          950: '#06120e', // Custom deepest forest green
         }
       },
       fontFamily: {

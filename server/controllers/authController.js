@@ -101,11 +101,17 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    console.log(`[AUTH] Login attempt for email: "${email}"`);
+
+    // Check for user (case insensitive / lowercase search)
+    const searchEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: searchEmail }).select('+password');
     if (!user) {
+      console.log(`[AUTH] User not found for email: "${searchEmail}"`);
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
+
+    console.log(`[AUTH] User found. Status: ${user.status}, Role: ${user.role}`);
 
     // Check status
     if (user.status === 'suspended') {
@@ -114,6 +120,7 @@ exports.login = async (req, res) => {
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
+    console.log(`[AUTH] Password verification result: ${isMatch}`);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
@@ -141,6 +148,7 @@ exports.login = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('[AUTH] Login error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
