@@ -141,16 +141,6 @@ export default function VoiceAssistant({ isOpen, onClose, onSearch, onCartOpen, 
       return;
     }
 
-    // 6. Open Eco Foods Store
-    if (cmd.includes('foods') || cmd.includes('food')) {
-      speak('Opening Eco Foods Store');
-      setTimeout(() => {
-        navigate('/store/eco-foods');
-        onClose();
-      }, 800);
-      return;
-    }
-
     // 7. Open Organic India Store
     if (cmd.includes('organic') || cmd.includes('organic india')) {
       speak('Opening Organic India Store');
@@ -313,7 +303,7 @@ export default function VoiceAssistant({ isOpen, onClose, onSearch, onCartOpen, 
               <HelpCircle className="h-3 w-3" /> Commands you can say
             </span>
             <ul className="text-[10px] text-slate-500 space-y-1 pl-4 list-disc font-medium">
-              <li><strong className="text-slate-400">"go to [store]"</strong>: Open Nike, Eco Foods, Organic India, Bamboo, etc.</li>
+              <li><strong className="text-slate-400">"go to [store]"</strong>: Open Nike, Organic India, Bamboo, etc.</li>
               <li><strong className="text-slate-400">"search [product]"</strong>: search tea, search shirt, find honey...</li>
               <li><strong className="text-slate-400">"open cart"</strong>: slides out your shopping bag drawer.</li>
               <li><strong className="text-slate-400">"show wallet"</strong>: opens your wallet details.</li>
