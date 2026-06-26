@@ -250,6 +250,54 @@ const seedData = async () => {
     await vendor10.save();
     console.log('Eco Home Decor Vendor created: home@theeco.com / password123 (slug: eco-home)');
 
+    // 11a. Create Vendor 11 (Eco Stationery)
+    const vendor11 = await User.create({
+      name: 'John Stationery',
+      email: 'stationery@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store11 = await Store.create({
+      name: 'Eco Stationery',
+      slug: 'eco-stationery',
+      description: 'Premium notebooks, journals, and writing tools crafted from recycled paper, bamboo, and cork.',
+      logo: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=150',
+      banner: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor11._id,
+      status: 'active'
+    });
+
+    vendor11.store = store11._id;
+    await vendor11.save();
+    console.log('Eco Stationery Vendor created: stationery@theeco.com / password123 (slug: eco-stationery)');
+
+    // 11b. Create Vendor 12 (Solar Mobility)
+    const vendor12 = await User.create({
+      name: 'John Mobility',
+      email: 'mobility@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store12 = await Store.create({
+      name: 'Solar Mobility',
+      slug: 'solar-mobility',
+      description: 'Innovative solar-powered electric bikes, helmets, and green transit gear for the eco-conscious commuter.',
+      logo: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=150',
+      banner: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor12._id,
+      status: 'active'
+    });
+
+    vendor12.store = store12._id;
+    await vendor12.save();
+    console.log('Solar Mobility Vendor created: mobility@theeco.com / password123 (slug: solar-mobility)');
+
     // 12. Create Customers
     const customer1 = await User.create({
       name: 'Alice Cooper',
@@ -2286,6 +2334,155 @@ const seedData = async () => {
         "https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=600"
       ]
     }
+  ],
+  "eco-stationery": [
+    {
+      "name": "Bamboo Ballpoint Pens (Pack of 5)",
+      "description": "Smooth writing retractable ballpoint pens with natural bamboo barrels and black ink.",
+      "price": 399,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"],
+      "variants": [{ "name": "Pack of 5", "price": 399, "stock": 120 }]
+    },
+    {
+      "name": "Recycled Kraft Paper Journal",
+      "description": "A5 size notebook with 160 pages of recycled post-consumer waste paper. Durable hard cover.",
+      "price": 499,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600"],
+      "variants": [{ "name": "A5 Journal", "price": 499, "stock": 80 }]
+    },
+    {
+      "name": "Natural Cork Pencil Case",
+      "description": "Eco-friendly, water-resistant pencil pouch made from harvested cork oak bark.",
+      "price": 299,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"],
+      "variants": [{ "name": "Standard", "price": 299, "stock": 95 }]
+    },
+    {
+      "name": "Handmade Seed Paper Notebook",
+      "description": "Cover and pages infused with wildflower seeds. Plant the pages after use to grow flowers.",
+      "price": 349,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600"]
+    },
+    {
+      "name": "Biodegradable Paper Clips (100 Pack)",
+      "description": "Rust-resistant steel clips coated with fully biodegradable plant-based starch plastics.",
+      "price": 149,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"]
+    },
+    {
+      "name": "Bamboo Desk Organizer",
+      "description": "Multi-compartment storage dock for pens, notes, and smartphone, crafted from solid bamboo.",
+      "price": 899,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600"]
+    },
+    {
+      "name": "Recycled Kraft Envelopes (Pack of 50)",
+      "description": "Self-sealing multipurpose mailing envelopes made from 100% recycled brown kraft paper.",
+      "price": 249,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"]
+    },
+    {
+      "name": "Organic Cotton Book Sleeve",
+      "description": "Padded protective sleeve to keep your books and tablets safe while traveling.",
+      "price": 450,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600"]
+    },
+    {
+      "name": "Bamboo Desk Ruler (30cm)",
+      "description": "Classic metric and imperial measuring ruler made from strong, sustainable bamboo.",
+      "price": 129,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"]
+    },
+    {
+      "name": "Eco-friendly Watercolor Palette",
+      "description": "Non-toxic organic pigments set in a biodegradable wheat straw mixing tray.",
+      "price": 799,
+      "category": "Stationery",
+      "images": ["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600"]
+    }
+  ],
+  "solar-mobility": [
+    {
+      "name": "Solar Powered E-Bike Conversion Kit",
+      "description": "Convert any standard bicycle into a solar-assisted hybrid electric bike. Includes 50W panel and hub motor.",
+      "price": 24999,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"],
+      "variants": [{ "name": "Standard Kit", "price": 24999, "stock": 10 }]
+    },
+    {
+      "name": "Solar Charging Smart Helmet",
+      "description": "Integrated solar panel charges built-in bluetooth speakers, mic, and rear LED safety lights.",
+      "price": 3499,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600"],
+      "variants": [{ "name": "Universal Fit", "price": 3499, "stock": 25 }]
+    },
+    {
+      "name": "Waterproof Solar Pannier Bag",
+      "description": "Rear rack bicycle bag featuring a detachable 10W solar charger to power your devices on the go.",
+      "price": 2899,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"]
+    },
+    {
+      "name": "Handcrafted Bamboo Frame Bicycle",
+      "description": "Stunning lightweight road bike frame handcrafted from cured structural bamboo poles.",
+      "price": 45000,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600"]
+    },
+    {
+      "name": "Solar Powered LED Bike Light Set",
+      "description": "Super bright front and rear lights that recharge under sunlight. Fully waterproof.",
+      "price": 899,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"]
+    },
+    {
+      "name": "Recycled Rubber Bike Tires (Pair)",
+      "description": "High-traction hybrid road tires manufactured from 50% recycled vehicle tires.",
+      "price": 1599,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600"]
+    },
+    {
+      "name": "Smart Solar Bike U-Lock",
+      "description": "Heavy-duty steel lock featuring solar-assisted fingerprint scanning and app tracking.",
+      "price": 4599,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"]
+    },
+    {
+      "name": "Reflective Eco-safety Vest",
+      "description": "High visibility safety vest woven from 100% recycled polyester neon threads.",
+      "price": 399,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600"]
+    },
+    {
+      "name": "Biodegradable Bike Chain Lube",
+      "description": "Plant-based, non-toxic wet lubricant designed for extreme gear protection and zero environmental runoff.",
+      "price": 249,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"]
+    },
+    {
+      "name": "Solar Portable Bike Pump",
+      "description": "Electric air compressor pump with solar charging and built-in emergency phone powerbank.",
+      "price": 1899,
+      "category": "Mobility",
+      "images": ["https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600"]
+    }
   ]
 };
 
@@ -2304,7 +2501,9 @@ const seedData = async () => {
       'pure-bamboo': store7._id,
       'herbal-garden': store8._id,
       'green-wardrobe': store9._id,
-      'eco-home': store10._id
+      'eco-home': store10._id,
+      'eco-stationery': store11._id,
+      'solar-mobility': store12._id
     };
 
     // Keep track of some seeded products to link sample orders

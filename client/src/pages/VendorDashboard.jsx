@@ -620,7 +620,7 @@ export default function VendorDashboard() {
                     value={productForm.category}
                     onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                     className="glass-input w-full"
-                    placeholder="e.g. Footwear, Produce"
+                    placeholder="e.g. Footwear, Stationery"
                   />
                 </div>
               </div>

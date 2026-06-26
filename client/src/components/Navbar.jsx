@@ -135,7 +135,8 @@ export default function Navbar({
                 <option value="">All</option>
                 <option value="Footwear">Shoes</option>
                 <option value="Apparel">Clothing</option>
-                <option value="Produce">Organic</option>
+                <option value="Stationery">Stationery</option>
+                <option value="Mobility">Mobility</option>
                 <option value="Electronics">Tech</option>
               </select>
 
