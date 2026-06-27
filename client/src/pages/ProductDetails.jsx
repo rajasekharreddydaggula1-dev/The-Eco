@@ -64,7 +64,49 @@ export default function ProductDetails() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-400 text-xs">Loading product details...</div>;
+    return (
+      <div className="min-h-screen bg-slate-950 py-10">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-6">
+          {/* Back link skeleton */}
+          <div className="h-4 bg-slate-900 rounded-md w-36 shimmer-sweep" />
+
+          {/* Grid Layout skeleton */}
+          <div className="grid gap-8 md:grid-cols-12 rounded-2xl glass-panel p-6 sm:p-8">
+            {/* Gallery Skeletons */}
+            <div className="md:col-span-6 space-y-4">
+              <div className="aspect-square rounded-xl bg-slate-900/60 shimmer-sweep" />
+              <div className="flex gap-2.5">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 w-16 bg-slate-900/40 rounded-lg shimmer-sweep" />
+                ))}
+              </div>
+            </div>
+
+            {/* Info Skeletons */}
+            <div className="md:col-span-6 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="h-5 w-20 bg-slate-905 rounded-full shimmer-sweep" />
+                <div className="h-7 bg-slate-850 rounded-md w-3/4 shimmer-sweep" />
+                <div className="h-8 bg-slate-800 rounded-md w-28 mt-2 shimmer-sweep" />
+                <div className="space-y-2 pt-4">
+                  <div className="h-3 bg-slate-900 rounded-md w-full shimmer-sweep" />
+                  <div className="h-3 bg-slate-900 rounded-md w-5/6 shimmer-sweep" />
+                  <div className="h-3 bg-slate-900 rounded-md w-2/3 shimmer-sweep" />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-slate-900">
+                <div className="h-4 bg-slate-900 rounded-md w-1/3 shimmer-sweep" />
+                <div className="flex gap-4">
+                  <div className="h-10 w-24 bg-slate-900 rounded-lg shimmer-sweep" />
+                  <div className="h-10 bg-slate-850 rounded-lg flex-1 shimmer-sweep" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error || !currentProduct) {
@@ -93,7 +135,7 @@ export default function ProductDetails() {
     <div className="min-h-screen bg-slate-950 py-10">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl bg-eco-600 border border-eco-500 px-4 py-3.5 text-xs font-semibold text-white shadow-2xl animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl bg-eco-600 border border-eco-500 px-4 py-3.5 text-xs font-semibold text-white shadow-2xl animate-slide-in-right">
           <Check className="h-4 w-4" />
           {toastMessage}
         </div>
@@ -101,20 +143,21 @@ export default function ProductDetails() {
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Back Link */}
-        <Link to={`/store/${storeSlug}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
-          <ArrowLeft className="h-4 w-4" />
+        <Link to={`/store/${storeSlug}`} className="group inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors duration-300">
+          <ArrowLeft className="h-4 w-4 transform transition-transform duration-300 group-hover:-translate-x-1" />
           Back to Store Catalog
         </Link>
 
         {/* Product Grid */}
-        <div className="grid gap-8 md:grid-cols-12 rounded-2xl glass-panel p-6 sm:p-8">
+        <div className="grid gap-8 md:grid-cols-12 rounded-2xl glass-panel p-6 sm:p-8 animate-fade-in-up">
           {/* Images Gallery */}
           <div className="md:col-span-6 space-y-4">
             <div className="aspect-square rounded-xl bg-slate-950 overflow-hidden border border-slate-900">
               <img
+                key={activeImage}
                 src={activeImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600'}
                 alt={currentProduct.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover animate-fade-in-up"
               />
             </div>
             {/* Gallery Thumbnails */}
@@ -124,8 +167,10 @@ export default function ProductDetails() {
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
-                    className={`h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden border transition-all ${
-                      activeImage === img ? 'border-eco-500 scale-95' : 'border-slate-800 opacity-60 hover:opacity-100'
+                    className={`h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden border transition-all duration-300 ${
+                      activeImage === img 
+                        ? 'border-eco-500 scale-90 ring-2 ring-eco-500/20' 
+                        : 'border-slate-800 opacity-60 hover:opacity-100 hover:scale-95'
                     }`}
                   >
                     <img src={img} alt="" className="h-full w-full object-cover" />
@@ -167,7 +212,7 @@ export default function ProductDetails() {
                           setSelectedVariant(v);
                           setQuantity(1);
                         }}
-                        className={`rounded-lg px-4 py-2 text-xs font-semibold border transition-all ${
+                        className={`rounded-lg px-4 py-2 text-xs font-semibold border transition-all duration-300 active:scale-95 ${
                           selectedVariant?._id === v._id
                             ? 'bg-eco-600 border-eco-500 text-white shadow-md'
                             : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
@@ -187,12 +232,12 @@ export default function ProductDetails() {
               <div className="flex items-center gap-2 text-xs font-medium">
                 {isOutOfStock ? (
                   <span className="flex items-center gap-1 text-red-400 font-bold">
-                    <ShieldAlert className="h-4 w-4" />
+                    <ShieldAlert className="h-4 w-4 animate-pulse" />
                     Out of Stock
                   </span>
                 ) : currentStock <= 5 ? (
                   <span className="flex items-center gap-1 text-yellow-400 font-semibold">
-                    <ShieldAlert className="h-4 w-4" />
+                    <ShieldAlert className="h-4 w-4 animate-bounce" />
                     Only {currentStock} items left in stock!
                   </span>
                 ) : (
@@ -207,7 +252,7 @@ export default function ProductDetails() {
                   <div className="flex items-center border border-slate-800 rounded-lg bg-slate-900 p-1">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="text-slate-400 hover:text-white px-2 py-1"
+                      className="text-slate-400 hover:text-white px-2 py-1 transition-transform duration-200 active:scale-75"
                       disabled={quantity <= 1}
                     >
                       -
@@ -215,7 +260,7 @@ export default function ProductDetails() {
                     <span className="text-xs font-bold px-3 text-slate-200">{quantity}</span>
                     <button
                       onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
-                      className="text-slate-400 hover:text-white px-2 py-1"
+                      className="text-slate-400 hover:text-white px-2 py-1 transition-transform duration-200 active:scale-75"
                       disabled={quantity >= currentStock}
                     >
                       +
@@ -224,7 +269,7 @@ export default function ProductDetails() {
 
                   <button
                     onClick={handleAdd}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-eco-600 hover:bg-eco-500 px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-eco-600/25 transition-all active:scale-[0.98]"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-eco-600 hover:bg-eco-500 hover:scale-[1.02] px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-eco-600/25 transition-all duration-300 active:scale-[0.97]"
                   >
                     <ShoppingCart className="h-4 w-4" />
                     Add to Cart

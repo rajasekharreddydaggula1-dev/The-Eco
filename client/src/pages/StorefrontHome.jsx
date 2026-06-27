@@ -91,18 +91,42 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
 
           {/* Directory Listings */}
           {storeLoading ? (
-            <div className="text-center text-slate-500 py-12">Loading marketplace storefronts...</div>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl glass-panel overflow-hidden border border-slate-900 bg-slate-950/40">
+                  <div className="h-36 w-full bg-slate-900/60 shimmer-sweep relative" />
+                  <div className="p-6 relative -mt-8 flex flex-col justify-between min-h-[160px] bg-slate-950/60 backdrop-blur-md">
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex-shrink-0 shimmer-sweep" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-slate-800 rounded-md w-3/4 shimmer-sweep" />
+                        <div className="h-3 bg-slate-900 rounded-md w-1/2 shimmer-sweep" />
+                      </div>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="h-3 bg-slate-900 rounded-md w-full shimmer-sweep" />
+                      <div className="h-3 bg-slate-900 rounded-md w-5/6 shimmer-sweep" />
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-slate-900 flex justify-between items-center">
+                      <div className="h-3.5 bg-slate-850 rounded-md w-24 shimmer-sweep" />
+                      <div className="h-4 w-4 bg-slate-850 rounded-full shimmer-sweep" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : stores.length === 0 ? (
             <div className="text-center text-slate-500 py-16 border border-dashed border-slate-800 rounded-2xl max-w-md mx-auto bg-slate-950/40 backdrop-blur-md">
               No storefronts are currently registered. Register as a Merchant/Vendor on the login page to launch a storefront!
             </div>
           ) : (
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-              {stores.map((store) => (
+              {stores.map((store, index) => (
                 <Link
                   key={store._id}
                   to={`/store/${store.slug}`}
-                  className="group block rounded-2xl glass-panel glass-panel-hover overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:ring-1 hover:ring-eco-400/20"
+                  style={{ animationDelay: `${index * 75}ms` }}
+                  className="group block rounded-2xl glass-panel card-elevate overflow-hidden animate-fade-in-up"
                 >
                   {/* Banner */}
                   <div className="h-36 w-full bg-slate-950 overflow-hidden relative">
@@ -264,18 +288,40 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
 
         {/* Product Grid */}
         {productsLoading ? (
-          <div className="text-center text-slate-500 py-12">Loading products...</div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex flex-col overflow-hidden rounded-xl border border-slate-900 bg-slate-950/40">
+                <div className="relative aspect-square bg-slate-900/60 shimmer-sweep" />
+                <div className="p-4 flex flex-col flex-1 space-y-3">
+                  <div className="h-4 bg-slate-850 rounded-md w-3/4 shimmer-sweep" />
+                  <div className="space-y-1.5">
+                    <div className="h-3 bg-slate-900 rounded-md w-full shimmer-sweep" />
+                    <div className="h-3 bg-slate-900 rounded-md w-5/6 shimmer-sweep" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="h-5 bg-slate-800 rounded-md w-16 shimmer-sweep" />
+                    <div className="h-3 bg-slate-900 rounded-md w-12 shimmer-sweep" />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <div className="h-8 bg-slate-850 rounded-lg flex-1 shimmer-sweep" />
+                    <div className="h-8 w-10 bg-slate-850 rounded-lg shimmer-sweep" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : products.length === 0 ? (
           <div className="text-center text-slate-500 py-16 border border-dashed border-slate-800 rounded-xl">
             No products match your filters. Check back later!
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
+            {products.map((product, index) => (
               <ProductCard
                 key={product._id}
                 product={product}
                 storeSlug={storeSlug}
+                index={index}
                 onQuickAdded={triggerToast}
               />
             ))}

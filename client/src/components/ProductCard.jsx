@@ -4,7 +4,7 @@ import { ShoppingCart, Eye, Package } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/slices/cartSlice';
 
-export default function ProductCard({ product, storeSlug, onQuickAdded }) {
+export default function ProductCard({ product, storeSlug, onQuickAdded, index = 0 }) {
   const dispatch = useDispatch();
 
   const handleQuickAdd = (e) => {
@@ -43,17 +43,20 @@ export default function ProductCard({ product, storeSlug, onQuickAdded }) {
   const isOutOfStock = product.stock <= 0;
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm transition-all duration-300 hover:border-slate-700 hover:bg-slate-900/60">
+    <div 
+      style={{ animationDelay: `${index * 60}ms` }}
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm card-elevate animate-fade-in-up"
+    >
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-slate-950">
         <img
           src={mainImage}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 ease-out"
           loading="lazy"
         />
         {/* Category Badge */}
-        <span className="absolute top-3 left-3 rounded-full bg-slate-950/80 backdrop-blur-md px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-300 uppercase border border-slate-800">
+        <span className="absolute top-3 left-3 rounded-full bg-slate-950/80 backdrop-blur-md px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-300 uppercase border border-slate-800 transition-transform duration-300 group-hover:scale-105">
           {product.category}
         </span>
         {/* Out Of Stock Badge */}
@@ -101,7 +104,7 @@ export default function ProductCard({ product, storeSlug, onQuickAdded }) {
         <div className="mt-3 flex gap-2 z-10">
           <Link
             to={`/store/${storeSlug}/products/${product._id}`}
-            className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 transition-all"
+            className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-slate-800 hover:bg-slate-750 hover:text-white px-3 py-2 text-xs font-semibold text-slate-300 transition-all duration-300 active:scale-95"
           >
             <Eye className="h-3.5 w-3.5" />
             Details
@@ -109,7 +112,7 @@ export default function ProductCard({ product, storeSlug, onQuickAdded }) {
           {!isOutOfStock && (
             <button
               onClick={handleQuickAdd}
-              className="flex items-center justify-center rounded-lg bg-eco-600 hover:bg-eco-500 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-eco-600/10 transition-all active:scale-95"
+              className="flex items-center justify-center rounded-lg bg-eco-600 hover:bg-eco-500 hover:scale-105 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-eco-600/10 transition-all duration-300 active:scale-90"
               title="Add to Cart"
             >
               <ShoppingCart className="h-4 w-4" />
