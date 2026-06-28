@@ -23,6 +23,11 @@ export default function WalletModal({ isOpen, onClose }) {
     try {
       const result = await dispatch(rechargeWallet({ amount: val }));
       if (rechargeWallet.fulfilled.match(result)) {
+        if (result.payload && result.payload.url) {
+          // Redirect user to Stripe secure payment page
+          window.location.href = result.payload.url;
+          return;
+        }
         setSuccessMsg(`Successfully added ₹${val.toFixed(2)} to your wallet!`);
         setAmount('');
         setTimeout(() => setSuccessMsg(''), 4000);

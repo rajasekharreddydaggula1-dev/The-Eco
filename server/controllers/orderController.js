@@ -109,59 +109,57 @@ exports.createCheckoutSession = async (req, res) => {
     });
 
     const chosenMethod = paymentMethod || 'Stripe';
+    const isStripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock_key';
+    const isOnlinePayment = ['Stripe', 'Card', 'UPI', 'Net Banking'].includes(chosenMethod);
 
-    if (chosenMethod !== 'Stripe') {
-      order.paymentMethod = chosenMethod;
+    if (isStripeConfigured && isOnlinePayment) {
+      order.paymentMethod = 'Stripe';
+      await order.save();
 
-      if (chosenMethod === 'Wallet') {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-          await Order.findByIdAndDelete(order._id);
-          return res.status(404).json({ success: false, message: 'User not found' });
+      // Create real Stripe checkout session (Stripe dynamically lists payment methods based on your Stripe account)
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: stripeLineItems,
+        mode: 'payment',
+        success_url: `${req.headers.origin}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.headers.origin}/cart`,
+        metadata: {
+          orderId: order._id.toString(),
+          storeId: req.tenantId
         }
-        if (user.walletBalance < totalAmount) {
-          await Order.findByIdAndDelete(order._id);
-          return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
-        }
-        user.walletBalance -= totalAmount;
-        await user.save();
+      });
 
-        const mockSessionId = `mock_wallet_${Date.now()}_${order._id}`;
-        order.stripeSessionId = mockSessionId;
-        order.status = 'paid';
-        order.paymentDetails = { transactionId: `WT-${Date.now()}` };
-        await order.save();
+      // Save Stripe session ID to order
+      order.stripeSessionId = session.id;
+      await order.save();
 
-        await deductStock(order.items);
+      return res.status(200).json({
+        success: true,
+        sessionId: session.id,
+        url: session.url
+      });
+    }
 
-        return res.status(200).json({
-          success: true,
-          mock: true,
-          url: `/checkout-success?session_id=${mockSessionId}&payment_method=Wallet`
-        });
+    // Otherwise, handle Wallet, COD, or Mock Fallback for online payments
+    order.paymentMethod = chosenMethod;
+
+    if (chosenMethod === 'Wallet') {
+      const user = await User.findById(req.user.id).select('+password');
+      if (!user) {
+        await Order.findByIdAndDelete(order._id);
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
-
-      if (chosenMethod === 'COD') {
-        const mockSessionId = `mock_cod_${Date.now()}_${order._id}`;
-        order.stripeSessionId = mockSessionId;
-        order.status = 'pending';
-        order.paymentDetails = { codCollected: false };
-        await order.save();
-
-        await deductStock(order.items);
-
-        return res.status(200).json({
-          success: true,
-          mock: true,
-          url: `/checkout-success?session_id=${mockSessionId}&payment_method=COD`
-        });
+      if (user.walletBalance < totalAmount) {
+        await Order.findByIdAndDelete(order._id);
+        return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
       }
+      user.walletBalance -= totalAmount;
+      await user.save();
 
-      // Card, UPI, Net Banking
-      const mockSessionId = `mock_${chosenMethod.toLowerCase().replace(' ', '_')}_${Date.now()}_${order._id}`;
+      const mockSessionId = `mock_wallet_${Date.now()}_${order._id}`;
       order.stripeSessionId = mockSessionId;
       order.status = 'paid';
-      order.paymentDetails = paymentDetails || {};
+      order.paymentDetails = { transactionId: `WT-${Date.now()}` };
       await order.save();
 
       await deductStock(order.items);
@@ -169,47 +167,40 @@ exports.createCheckoutSession = async (req, res) => {
       return res.status(200).json({
         success: true,
         mock: true,
-        url: `/checkout-success?session_id=${mockSessionId}&payment_method=${encodeURIComponent(chosenMethod)}`
+        url: `/checkout-success?session_id=${mockSessionId}&payment_method=Wallet`
       });
     }
 
-    const isStripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock_key';
-
-    if (!isStripeConfigured) {
-      // Mock payment mode if Stripe is not configured
-      const mockSessionId = `mock_session_${Date.now()}_${order._id}`;
+    if (chosenMethod === 'COD') {
+      const mockSessionId = `mock_cod_${Date.now()}_${order._id}`;
       order.stripeSessionId = mockSessionId;
+      order.status = 'pending';
+      order.paymentDetails = { codCollected: false };
       await order.save();
+
+      await deductStock(order.items);
 
       return res.status(200).json({
         success: true,
         mock: true,
-        sessionId: mockSessionId,
-        url: `/checkout-success?session_id=${mockSessionId}`
+        url: `/checkout-success?session_id=${mockSessionId}&payment_method=COD`
       });
     }
 
-    // Create real Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: stripeLineItems,
-      mode: 'payment',
-      success_url: `${req.headers.origin}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.origin}/cart`,
-      metadata: {
-        orderId: order._id.toString(),
-        storeId: req.tenantId
-      }
-    });
-
-    // Save Stripe session ID to order
-    order.stripeSessionId = session.id;
+    // Fallback Mock Mode for Card, UPI, Net Banking, or Stripe when Stripe is not configured
+    const mockSessionId = `mock_${chosenMethod.toLowerCase().replace(' ', '_')}_${Date.now()}_${order._id}`;
+    order.stripeSessionId = mockSessionId;
+    order.status = 'paid';
+    order.paymentDetails = paymentDetails || {};
     await order.save();
 
-    res.status(200).json({
+    await deductStock(order.items);
+
+    return res.status(200).json({
       success: true,
-      sessionId: session.id,
-      url: session.url
+      mock: true,
+      sessionId: mockSessionId,
+      url: `/checkout-success?session_id=${mockSessionId}&payment_method=${encodeURIComponent(chosenMethod)}`
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -268,25 +259,48 @@ exports.stripeWebhook = async (req, res) => {
   // Handle the checkout.session.completed event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const orderId = session.metadata.orderId;
 
-    try {
-      const order = await Order.findById(orderId);
-      if (order && order.status === 'pending') {
-        order.status = 'paid';
-        await order.save();
+    // Check if it's a wallet recharge or standard order checkout
+    if (session.metadata && session.metadata.type === 'wallet_recharge') {
+      const { userId, amount } = session.metadata;
+      try {
+        const user = await User.findByIdAndUpdate(
+          userId,
+          { $inc: { walletBalance: Number(amount) } },
+          { new: true }
+        ).select('+password');
 
-        // Adjust stock
-        await deductStock(order.items);
-
-        // Fetch customer email
-        const user = await User.findById(order.customer);
-        const customerEmail = user ? user.email : 'customer@theeco.com';
-        console.log(`[EMAIL LOGGER] To: ${customerEmail} - Order ${order._id} marked as Paid. Thank you!`);
+        if (user) {
+          console.log(`[EMAIL LOGGER] To: ${user.email} - Wallet topped up by ₹${amount} successfully. New Balance: ₹${user.walletBalance}`);
+        } else {
+          console.error(`[Webhook] User ${userId} not found for wallet recharge.`);
+        }
+      } catch (dbErr) {
+        console.error(`Failed to update wallet balance on webhook: ${dbErr.message}`);
+        return res.status(500).json({ success: false, message: `Database error: ${dbErr.message}` });
       }
-    } catch (dbErr) {
-      console.error(`Failed to update order on webhook: ${dbErr.message}`);
-      return res.status(500).json({ success: false, message: `Database error: ${dbErr.message}` });
+    } else {
+      const orderId = session.metadata ? session.metadata.orderId : null;
+      if (orderId) {
+        try {
+          const order = await Order.findById(orderId);
+          if (order && order.status === 'pending') {
+            order.status = 'paid';
+            await order.save();
+
+            // Adjust stock
+            await deductStock(order.items);
+
+            // Fetch customer email
+            const user = await User.findById(order.customer);
+            const customerEmail = user ? user.email : 'customer@theeco.com';
+            console.log(`[EMAIL LOGGER] To: ${customerEmail} - Order ${order._id} marked as Paid. Thank you!`);
+          }
+        } catch (dbErr) {
+          console.error(`Failed to update order on webhook: ${dbErr.message}`);
+          return res.status(500).json({ success: false, message: `Database error: ${dbErr.message}` });
+        }
+      }
     }
   }
 

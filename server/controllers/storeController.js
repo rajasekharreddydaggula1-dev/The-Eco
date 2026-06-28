@@ -105,7 +105,7 @@ exports.toggleStoreStatus = async (req, res) => {
     await store.save();
 
     // Suspend or activate associated vendor user as well
-    const vendor = await User.findById(store.vendor);
+    const vendor = await User.findById(store.vendor).select('+password');
     if (vendor) {
       vendor.status = status;
       await vendor.save();

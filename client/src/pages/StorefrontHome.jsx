@@ -180,9 +180,59 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
     );
   }
 
-  // Render SPECIFIC Store Catalog
+  // Render SPECIFIC Store Catalog loading skeleton
   if (storeLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-400 text-xs">Loading storefront details...</div>;
+    return (
+      <div className="min-h-screen bg-slate-950">
+        {/* Banner Skeleton */}
+        <div className="relative h-60 w-full overflow-hidden bg-slate-950 border-b border-slate-900">
+          <div className="h-full w-full bg-slate-900/60 shimmer-sweep" />
+          <div className="absolute bottom-6 left-0 right-0">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-end gap-4">
+              <div className="h-16 w-16 rounded-xl bg-slate-950 border border-slate-800 flex-shrink-0 shimmer-sweep" />
+              <div className="space-y-2 pb-1">
+                <div className="h-6 bg-slate-850 rounded-md w-48 shimmer-sweep" />
+                <div className="h-3.5 bg-slate-900 rounded-md w-72 shimmer-sweep" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Catalog Body Skeleton */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+          {/* Filters skeleton */}
+          <div className="flex gap-1.5 pb-6 border-b border-slate-900">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 w-20 bg-slate-900 rounded-lg border border-slate-850 shimmer-sweep" />
+            ))}
+          </div>
+
+          {/* Product grid skeletons */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex flex-col overflow-hidden rounded-xl border border-slate-900 bg-slate-950/40">
+                <div className="relative aspect-square bg-slate-900/60 shimmer-sweep" />
+                <div className="p-4 flex flex-col flex-1 space-y-3">
+                  <div className="h-4 bg-slate-850 rounded-md w-3/4 shimmer-sweep" />
+                  <div className="space-y-1.5">
+                    <div className="h-3 bg-slate-900 rounded-md w-full shimmer-sweep" />
+                    <div className="h-3 bg-slate-900 rounded-md w-5/6 shimmer-sweep" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="h-5 bg-slate-800 rounded-md w-16 shimmer-sweep" />
+                    <div className="h-3 bg-slate-900 rounded-md w-12 shimmer-sweep" />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <div className="h-8 bg-slate-850 rounded-lg flex-1 shimmer-sweep" />
+                    <div className="h-8 w-10 bg-slate-850 rounded-lg shimmer-sweep" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!currentStore) {

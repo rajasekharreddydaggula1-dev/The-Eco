@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Store = require('../models/Store');
 const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -178,13 +179,51 @@ exports.rechargeWallet = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide a valid recharge amount' });
     }
 
-    const user = await User.findById(req.user.id);
+    const isStripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock_key';
+
+    if (isStripeConfigured) {
+      // Create Stripe Checkout Session for Wallet Top Up
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'inr',
+              product_data: {
+                name: 'Wallet Top Up - The Eco',
+                description: `Recharge wallet balance with ₹${amount}`
+              },
+              unit_amount: Math.round(amount * 100)
+            },
+            quantity: 1
+          }
+        ],
+        mode: 'payment',
+        success_url: `${req.headers.origin}/checkout-success?session_id={CHECKOUT_SESSION_ID}&type=wallet`,
+        cancel_url: `${req.headers.origin}/profile`,
+        metadata: {
+          type: 'wallet_recharge',
+          userId: req.user.id,
+          amount: amount.toString()
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        url: session.url
+      });
+    }
+
+    // Fallback Mock Mode: directly update wallet balance in DB
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $inc: { walletBalance: Number(amount) } },
+      { new: true }
+    );
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-
-    user.walletBalance = (user.walletBalance || 0) + Number(amount);
-    await user.save();
 
     res.status(200).json({
       success: true,

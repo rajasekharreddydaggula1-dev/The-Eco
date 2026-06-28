@@ -37,6 +37,38 @@ export default function ProfilePage() {
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      try {
+        const result = await dispatch(cancelOrder({ id: orderId }));
+        if (cancelOrder.fulfilled.match(result)) {
+          setActionMessage('Order cancelled successfully!');
+          setTimeout(() => setActionMessage(''), 3000);
+        } else {
+          alert(result.payload || 'Failed to cancel order.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleReturnOrder = async (orderId) => {
+    if (window.confirm('Are you sure you want to return this order?')) {
+      try {
+        const result = await dispatch(returnOrder({ id: orderId }));
+        if (returnOrder.fulfilled.match(result)) {
+          setActionMessage('Return processed and refunded successfully!');
+          setTimeout(() => setActionMessage(''), 3000);
+        } else {
+          alert(result.payload || 'Failed to return order.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
   // Helper to format date
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
