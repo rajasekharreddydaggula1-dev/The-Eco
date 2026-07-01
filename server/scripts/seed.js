@@ -298,6 +298,54 @@ const seedData = async () => {
     await vendor12.save();
     console.log('Solar Mobility Vendor created: mobility@theeco.com / password123 (slug: solar-mobility)');
 
+    // 11c. Create Vendor 13 (EcoClean Solutions)
+    const vendor13 = await User.create({
+      name: 'Jane Clean',
+      email: 'clean@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store13 = await Store.create({
+      name: 'EcoClean Solutions',
+      slug: 'eco-clean',
+      description: 'Refillable, non-toxic, and planet-friendly cleaning products for a sparkling clean home.',
+      logo: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=150',
+      banner: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor13._id,
+      status: 'active'
+    });
+
+    vendor13.store = store13._id;
+    await vendor13.save();
+    console.log('EcoClean Solutions Vendor created: clean@theeco.com / password123 (slug: eco-clean)');
+
+    // 11d. Create Vendor 14 (Thrift & Thread)
+    const vendor14 = await User.create({
+      name: 'Sarah Vintage',
+      email: 'vintage@theeco.com',
+      password: 'password123',
+      role: 'Vendor',
+      status: 'active',
+      walletBalance: 5000
+    });
+
+    const store14 = await Store.create({
+      name: 'Thrift & Thread',
+      slug: 'thrift-thread',
+      description: 'Curated vintage clothing and upcycled fashion to reduce textile waste and support circularity.',
+      logo: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=150',
+      banner: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1200&auto=format&fit=crop&q=80',
+      vendor: vendor14._id,
+      status: 'active'
+    });
+
+    vendor14.store = store14._id;
+    await vendor14.save();
+    console.log('Thrift & Thread Vendor created: vintage@theeco.com / password123 (slug: thrift-thread)');
+
     // 12. Create Customers
     const customer1 = await User.create({
       name: 'Alice Cooper',
@@ -2483,6 +2531,298 @@ const seedData = async () => {
       "category": "Mobility",
       "images": ["https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600"]
     }
+  ],
+  "eco-clean": [
+    {
+      "name": "Eco Laundry Detergent Sheets (60 Packs)",
+      "description": "Plant-based laundry detergent sheets, plastic-free, hypoallergenic and highly effective.",
+      "price": 499,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1610555356070-d0efb6505f81?w=600"],
+      "variants": [
+        { "name": "Fresh Linen", "price": 499, "stock": 50 },
+        { "name": "Fragrance Free", "price": 499, "stock": 40 }
+      ]
+    },
+    {
+      "name": "Bamboo Dish Brushes (Set of 3)",
+      "description": "Natural coconut and sisal fiber brushes. Ideal for non-scratch kitchen scrubbing.",
+      "price": 299,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Refillable Multi-Surface Cleaner",
+      "description": "Concentrated cleaning tablet with reusable amber glass spray bottle. Just add water.",
+      "price": 399,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Natural Dishwasher Tablets (40 Tabs)",
+      "description": "Biodegradable, phosphate-free dishwasher detergent tabs with water-soluble film.",
+      "price": 599,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1610555356070-d0efb6505f81?w=600"]
+    },
+    {
+      "name": "Organic Cotton Cleaning Cloths (Set of 5)",
+      "description": "Washable, super absorbent and completely compostable cotton cleaning wipes.",
+      "price": 249,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1563453392212-326f5e854473?w=600"]
+    },
+    {
+      "name": "Castile Liquid Soap (500ml)",
+      "description": "Unscented organic Castile soap made from organic olive and coconut oils.",
+      "price": 699,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600"]
+    },
+    {
+      "name": "Eucalyptus Toilet Cleaner (750ml)",
+      "description": "Non-toxic acidic formula with organic eucalyptus oils to clean and refresh.",
+      "price": 249,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Compostable Trash Bags (30L, 25 Bags)",
+      "description": "BPI certified compostable garbage bags made of cornstarch composite.",
+      "price": 349,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1610555356070-d0efb6505f81?w=600"]
+    },
+    {
+      "name": "Natural Wood Polish Spray (250ml)",
+      "description": "Plant-derived protective oil blend with organic beeswax for beautiful shine.",
+      "price": 299,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Wool Dryer Balls (Set of 6)",
+      "description": "100% New Zealand wool balls. Reusable fabric softener that cuts drying time.",
+      "price": 449,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600"]
+    },
+    {
+      "name": "Citrus Glass Cleaner Refill",
+      "description": "Concentrate tablets for sparkling glass surfaces without streak marks.",
+      "price": 199,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Coconut Husk Scrubber (Pack of 4)",
+      "description": "Scratch-free biodegradable scrub pads made of coconut coir fiber.",
+      "price": 149,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Eco Hand Wash Refill Pouch",
+      "description": "Foam hand soap concentrate with natural lavender oil essence.",
+      "price": 299,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600"]
+    },
+    {
+      "name": "Natural Odor Eliminator Spray",
+      "description": "Safe, non-toxic plant-extract odor neutralizer for rooms and pet areas.",
+      "price": 320,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Copper Scouring Pads (Set of 3)",
+      "description": "Heavy-duty copper pads for pots, pans and stainless steel surfaces cleaning.",
+      "price": 199,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Beeswax Food Wraps (Pack of 3)",
+      "description": "Reusable organic cotton wraps coated with beeswax and jojoba oil.",
+      "price": 399,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=600"]
+    },
+    {
+      "name": "Luffa Sponge (Pack of 3)",
+      "description": "Natural loofah sponge gourds for kitchen cleaning and body exfoliation.",
+      "price": 149,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Baking Soda Cleaning Paste",
+      "description": "Extra-strength scrub paste with baking soda for tough grease and stains.",
+      "price": 199,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    },
+    {
+      "name": "Tea Tree Hand Sanitizer (50ml)",
+      "description": "Alcohol-free plant-based sanitizer with skin conditioning aloe vera.",
+      "price": 99,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600"]
+    },
+    {
+      "name": "Recycled Plastic Bucket (10L)",
+      "description": "Sturdy bucket made of 100% post-consumer recycled plastic.",
+      "price": 299,
+      "category": "Household",
+      "images": ["https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600"]
+    }
+  ],
+  "thrift-thread": [
+    {
+      "name": "Upcycled Denim Jacket",
+      "description": "Remade from vintage cotton jeans. Unique patchwork style jacket.",
+      "price": 2499,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1542272604-787c3835535d?w=600"],
+      "variants": [
+        { "name": "Medium", "price": 2499, "stock": 5 },
+        { "name": "Large", "price": 2699, "stock": 3 }
+      ]
+    },
+    {
+      "name": "Vintage Flannel Shirt",
+      "description": "Classic 90s soft flannel shirt in checks pattern. High quality cotton.",
+      "price": 999,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Retro Knit Sweater",
+      "description": "80s vintage pattern cozy wool sweater. Earth tone colors.",
+      "price": 1899,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Recycled Cotton Tote Bag",
+      "description": "Heavyweight screenprinted vintage tote made from recycled industrial scraps.",
+      "price": 299,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1544816155-12df9643f363?w=600"]
+    },
+    {
+      "name": "Upcycled Patchwork Cap",
+      "description": "Made from recycled vintage fabric offcuts. Adjustable strap.",
+      "price": 499,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600"]
+    },
+    {
+      "name": "Vintage Leather Boots",
+      "description": "Classic unisex leather boots, fully restored and conditioned.",
+      "price": 3499,
+      "category": "Footwear",
+      "images": ["https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600"]
+    },
+    {
+      "name": "Secondhand Linen Trousers",
+      "description": "High-rise vintage linen pants in sand white shade. Lightweight.",
+      "price": 1499,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Upcycled Tote Backpack",
+      "description": "Convertible backpack bag made from heavy-duty vintage military canvas.",
+      "price": 1899,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600"]
+    },
+    {
+      "name": "Retro Windbreaker Jacket",
+      "description": "80s colorblock windbreaker with hood. Water-resistant nylon.",
+      "price": 2199,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600"]
+    },
+    {
+      "name": "Vintage Graphic Tee",
+      "description": "70s rock band faded concert tee. Soft vintage cotton feel.",
+      "price": 799,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600"]
+    },
+    {
+      "name": "Upcycled Corduroy Shorts",
+      "description": "Remade shorts tailored from high quality vintage corduroy trousers.",
+      "price": 899,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1542272604-787c3835535d?w=600"]
+    },
+    {
+      "name": "Vintage Trench Coat",
+      "description": "Double-breasted classic beige trench coat with waist belt.",
+      "price": 2999,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Recycled Wool Scarf",
+      "description": "Cozy knit winter scarf made from 100% repurposed wool fibers.",
+      "price": 599,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Vintage Silk Scarf",
+      "description": "Colorful neck scarf patterned in unique hand-printed designs.",
+      "price": 399,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Secondhand Floral Dress",
+      "description": "70s floral sundress in organic linen. Beautifully preserved.",
+      "price": 1699,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=600"]
+    },
+    {
+      "name": "Vintage Denim Overall",
+      "description": "Classic light wash blue overall with metal button accents.",
+      "price": 2299,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1542272604-787c3835535d?w=600"]
+    },
+    {
+      "name": "Upcycled Bucket Hat",
+      "description": "Reversible sun hat handmade from vintage denim scrap fabrics.",
+      "price": 399,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600"]
+    },
+    {
+      "name": "Retro Fleece Pullover",
+      "description": "Warm half-zip fleece sweater from the late 90s. Cleaned and restored.",
+      "price": 1299,
+      "category": "Apparel",
+      "images": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600"]
+    },
+    {
+      "name": "Vintage Leather Belt",
+      "description": "Brown leather belt with distressed details and solid brass buckle.",
+      "price": 599,
+      "category": "Accessories",
+      "images": ["https://images.unsplash.com/photo-1542272604-787c3835535d?w=600"]
+    },
+    {
+      "name": "Recycled Canvas Sneakers",
+      "description": "Classic low-top canvas sneakers made from recycled cotton canvas.",
+      "price": 1499,
+      "category": "Footwear",
+      "images": ["https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=600"]
+    }
   ]
 };
 
@@ -2503,7 +2843,9 @@ const seedData = async () => {
       'green-wardrobe': store9._id,
       'eco-home': store10._id,
       'eco-stationery': store11._id,
-      'solar-mobility': store12._id
+      'solar-mobility': store12._id,
+      'eco-clean': store13._id,
+      'thrift-thread': store14._id
     };
 
     // Keep track of some seeded products to link sample orders

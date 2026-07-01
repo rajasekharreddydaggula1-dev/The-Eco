@@ -53,8 +53,8 @@ npm run seed
 
 This will clear existing collections and register:
 - **1 Super Admin account** (for platform management)
-- **4 Stores / Vendors** (Nike, Organic India, Khadi Naturals, Clay & Earth)
-- **14 Products** across multiple categories with custom price variants (all in INR `₹`)
+- **13 Stores / Vendors** (including Nike, Organic India, Khadi Naturals, Clay & Earth, EcoClean Solutions, and Thrift & Thread)
+- **260 Products** across multiple categories with custom price variants (all in INR `₹`)
 - **3 Test orders**
 
 ---
@@ -92,6 +92,8 @@ Use the following credentials to log in and test different user dashboards:
 | **Organic India Vendor** | `organic@theeco.com` | `password123` | `/store/organic-india` |
 | **Khadi Naturals Vendor** | `khadi@theeco.com` | `password123` | `/store/khadi-naturals` |
 | **Clay & Earth Vendor** | `clay@theeco.com` | `password123` | `/store/clay-earth` |
+| **EcoClean Solutions Vendor** | `clean@theeco.com` | `password123` | `/store/eco-clean` |
+| **Thrift & Thread Vendor** | `vintage@theeco.com` | `password123` | `/store/thrift-thread` |
 | **Customer 1** | `alice@theeco.com` | `password123` | *(Customer Shopping Portal)* |
 | **Customer 2** | `bob@theeco.com` | `password123` | *(Customer Shopping Portal)* |
 
