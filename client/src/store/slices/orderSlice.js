@@ -38,25 +38,31 @@ export const checkoutCart = createAsyncThunk(
   }
 );
 
-export const confirmMockPayment = createAsyncThunk(
-  'orders/confirmMockPayment',
-  async ({ sessionId }, { getState, rejectWithValue }) => {
+export const confirmPayment = createAsyncThunk(
+  'orders/confirmPayment',
+  async ({ sessionId, type }, { getState, dispatch, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      const response = await fetch('/api/orders/confirm-mock-payment', {
+      const response = await fetch('/api/orders/confirm-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ sessionId })
+        body: JSON.stringify({ sessionId, type })
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      if (type === 'wallet' && data.walletBalance !== undefined) {
+        dispatch(updateWalletBalance(data.walletBalance));
+      }
+      return data;
     } catch (e) {
       return rejectWithValue(e.message);
     }
   }
 );
+
+export const confirmMockPayment = confirmPayment;
 
 export const cancelOrder = createAsyncThunk(
   'orders/cancel',
@@ -173,15 +179,15 @@ const orderSlice = createSlice({
         state.checkoutLoading = false;
         state.error = action.payload;
       })
-      // Confirm Mock Payment
-      .addCase(confirmMockPayment.pending, (state) => {
+      // Confirm Payment
+      .addCase(confirmPayment.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(confirmMockPayment.fulfilled, (state) => {
+      .addCase(confirmPayment.fulfilled, (state) => {
         state.loading = false;
       })
-      .addCase(confirmMockPayment.rejected, (state, action) => {
+      .addCase(confirmPayment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

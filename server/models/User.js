@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 5000
   },
+  processedStripeSessions: {
+    type: [String],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now

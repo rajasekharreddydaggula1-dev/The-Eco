@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   createCheckoutSession,
+  confirmPayment,
   confirmMockPayment,
   getOrders,
   updateOrderStatus,
@@ -13,6 +14,9 @@ const { resolveTenant, requireTenant } = require('../middleware/tenant');
 
 // Checkout requires Customer role and Tenant Store context
 router.post('/checkout', protect, authorize('Customer'), resolveTenant, requireTenant, createCheckoutSession);
+
+// Confirm payment for checkout/wallet recharge (Mock and Stripe)
+router.post('/confirm-payment', protect, confirmPayment);
 
 // Confirm mock payment for local development sandbox
 router.post('/confirm-mock-payment', protect, confirmMockPayment);

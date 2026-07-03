@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { CheckCircle, ArrowRight, ShieldCheck, ShoppingBag, Receipt } from 'lucide-react';
-import { confirmMockPayment } from '../store/slices/orderSlice';
+import { confirmPayment } from '../store/slices/orderSlice';
 import { clearCart } from '../store/slices/cartSlice';
 
 export default function CheckoutSuccess() {
@@ -23,11 +23,13 @@ export default function CheckoutSuccess() {
       }
 
       try {
-        if (sessionId.startsWith('mock_')) {
-          // Verify simulation payment on the server
-          const result = await dispatch(confirmMockPayment({ sessionId }));
-          if (confirmMockPayment.fulfilled.match(result)) {
-            const order = result.payload.order;
+        const result = await dispatch(confirmPayment({ sessionId, type }));
+        if (confirmPayment.fulfilled.match(result)) {
+          const data = result.payload;
+          if (type === 'wallet') {
+            setSuccess(true);
+          } else if (data && data.order) {
+            const order = data.order;
             setOrderInfo(order);
             setSuccess(true);
             
@@ -35,21 +37,22 @@ export default function CheckoutSuccess() {
             if (order && order.store) {
               dispatch(clearCart({ storeId: order.store }));
             }
+          } else {
+            setSuccess(true);
           }
         } else {
-          // For real Stripe payment, webhook completes it.
-          // Displaying general success message for Stripe completion
-          setSuccess(true);
+          setSuccess(false);
         }
       } catch (err) {
         console.error(err);
+        setSuccess(false);
       } finally {
         setLoading(false);
       }
     };
 
     verifyPayment();
-  }, [sessionId, dispatch]);
+  }, [sessionId, type, dispatch]);
 
   return (
     <div className="relative min-h-screen bg-slate-950 flex items-center justify-center p-6 text-xs">

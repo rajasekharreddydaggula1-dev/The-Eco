@@ -207,31 +207,110 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
-// @desc    Mock Confirm Payment (for local developer fallback)
-// @route   POST /api/orders/confirm-mock-payment
+// @desc    Confirm Payment (both Mock and real Stripe checkout/wallet recharge)
+// @route   POST /api/orders/confirm-payment
 // @access  Private
-exports.confirmMockPayment = async (req, res) => {
+exports.confirmPayment = async (req, res) => {
   try {
-    const { sessionId } = req.body;
-    const order = await Order.findOne({ stripeSessionId: sessionId });
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found for session' });
+    const { sessionId, type } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: 'Session ID is required' });
     }
 
-    if (order.status === 'pending') {
-      order.status = 'paid';
-      await order.save();
+    // 1. Handle Mock payment session
+    if (sessionId.startsWith('mock_')) {
+      if (type === 'wallet' || sessionId.includes('wallet_recharge')) {
+        return res.status(200).json({
+          success: true,
+          message: 'Mock wallet recharge verified successfully',
+          walletBalance: req.user.walletBalance
+        });
+      }
 
-      // Deduct stock levels
-      await deductStock(order.items);
+      const order = await Order.findOne({ stripeSessionId: sessionId });
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Order not found for session' });
+      }
 
-      console.log(`[MOCK EMAIL] To: ${req.user.email} - Order ${order._id} paid successfully via Mock Payment.`);
+      if (order.status === 'pending') {
+        order.status = 'paid';
+        await order.save();
+        await deductStock(order.items);
+        console.log(`[MOCK EMAIL] To: ${req.user.email} - Order ${order._id} paid successfully via Mock Payment.`);
+      }
+
+      return res.status(200).json({ success: true, message: 'Mock payment verified successfully', order });
     }
 
-    res.status(200).json({ success: true, message: 'Mock payment verified successfully', order });
+    // 2. Handle Real Stripe session
+    const isStripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock_key';
+    if (!isStripeConfigured) {
+      return res.status(400).json({ success: false, message: 'Stripe is not configured on this server' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session) {
+      return res.status(404).json({ success: false, message: 'Stripe session not found' });
+    }
+
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({ success: false, message: 'Payment has not been completed' });
+    }
+
+    const isWalletRecharge = type === 'wallet' || (session.metadata && session.metadata.type === 'wallet_recharge');
+
+    if (isWalletRecharge) {
+      const userId = session.metadata ? session.metadata.userId : req.user.id;
+      const amount = session.metadata ? Number(session.metadata.amount) : (session.amount_total / 100);
+
+      const user = await User.findById(userId).select('+password');
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Check if session has already been processed to avoid double crediting
+      if (!user.processedStripeSessions.includes(sessionId)) {
+        user.walletBalance = (user.walletBalance || 0) + amount;
+        user.processedStripeSessions.push(sessionId);
+        await user.save();
+        console.log(`[EMAIL LOGGER] To: ${user.email} - Wallet topped up by ₹${amount} successfully. New Balance: ₹${user.walletBalance}`);
+      } else {
+        console.log(`[Payment Confirmation] Wallet recharge session ${sessionId} already processed.`);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Stripe wallet recharge verified successfully',
+        walletBalance: user.walletBalance
+      });
+    } else {
+      // Order Checkout
+      const order = await Order.findOne({ stripeSessionId: sessionId });
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Order not found for session' });
+      }
+
+      if (order.status === 'pending') {
+        order.status = 'paid';
+        await order.save();
+        await deductStock(order.items);
+
+        // Fetch customer email
+        const user = await User.findById(order.customer);
+        const customerEmail = user ? user.email : 'customer@theeco.com';
+        console.log(`[EMAIL LOGGER] To: ${customerEmail} - Order ${order._id} marked as Paid. Thank you!`);
+      }
+
+      return res.status(200).json({ success: true, message: 'Payment verified successfully', order });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// Keep confirmMockPayment for backward compatibility but delegate to confirmPayment
+exports.confirmMockPayment = async (req, res) => {
+  return exports.confirmPayment(req, res);
 };
 
 // @desc    Stripe Webhook Handler
@@ -264,14 +343,17 @@ exports.stripeWebhook = async (req, res) => {
     if (session.metadata && session.metadata.type === 'wallet_recharge') {
       const { userId, amount } = session.metadata;
       try {
-        const user = await User.findByIdAndUpdate(
-          userId,
-          { $inc: { walletBalance: Number(amount) } },
-          { new: true }
-        ).select('+password');
+        const user = await User.findById(userId).select('+password');
 
         if (user) {
-          console.log(`[EMAIL LOGGER] To: ${user.email} - Wallet topped up by ₹${amount} successfully. New Balance: ₹${user.walletBalance}`);
+          if (!user.processedStripeSessions.includes(session.id)) {
+            user.walletBalance = (user.walletBalance || 0) + Number(amount);
+            user.processedStripeSessions.push(session.id);
+            await user.save();
+            console.log(`[EMAIL LOGGER] To: ${user.email} - Wallet topped up by ₹${amount} successfully. New Balance: ₹${user.walletBalance}`);
+          } else {
+            console.log(`[Webhook] Wallet recharge session ${session.id} already processed.`);
+          }
         } else {
           console.error(`[Webhook] User ${userId} not found for wallet recharge.`);
         }
