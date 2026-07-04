@@ -232,7 +232,7 @@ exports.confirmPayment = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Order not found for session' });
       }
 
-      if (order.status === 'pending') {
+      if (order.status === 'pending' && order.paymentMethod !== 'COD') {
         order.status = 'paid';
         await order.save();
         await deductStock(order.items);

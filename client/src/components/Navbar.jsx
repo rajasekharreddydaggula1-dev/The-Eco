@@ -227,20 +227,6 @@ export default function Navbar({
                 </Link>
               )}
 
-              {/* Your Orders & Tracking (Desktop Only) */}
-              {user && user.role === 'Customer' && (
-                <Link
-                  to="/profile"
-                  className="hidden md:flex flex-col text-left border border-transparent hover:border-slate-800 px-2.5 py-1 rounded transition-colors"
-                  title="Your Order History & Shipment Tracking"
-                >
-                  <div className="text-[10px] leading-tight">
-                    <p className="text-[9px] text-slate-400 font-medium">Returns</p>
-                    <p className="font-extrabold text-slate-100">& Orders</p>
-                  </div>
-                </Link>
-              )}
-
               {/* Role Admin/Merchant Buttons (Desktop Only) */}
               {user && user.role === 'Super Admin' && (
                 <Link
@@ -276,6 +262,23 @@ export default function Navbar({
                 >
                   <Wallet className="h-5 w-5" />
                 </button>
+              )}
+
+              {/* Your Orders & Tracking (Mobile & Desktop) */}
+              {user && user.role === 'Customer' && (
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 border border-transparent hover:border-slate-800 px-2 py-1 rounded transition-colors relative cursor-pointer"
+                  title="Your Order History & Shipment Tracking"
+                >
+                  <div className="relative">
+                    <Package className="h-5 w-5 sm:h-6 sm:w-6 text-slate-200" />
+                  </div>
+                  <div className="text-[10px] leading-tight text-left hidden sm:block">
+                    <p className="text-[9px] text-slate-400 font-medium">Returns</p>
+                    <p className="font-extrabold text-slate-100">& Orders</p>
+                  </div>
+                </Link>
               )}
 
               {/* Cart Icon widget */}

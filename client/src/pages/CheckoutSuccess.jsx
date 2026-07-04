@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { CheckCircle, ArrowRight, ShieldCheck, ShoppingBag, Receipt } from 'lucide-react';
 import { confirmPayment } from '../store/slices/orderSlice';
 import { clearCart } from '../store/slices/cartSlice';
+import { getProfile } from '../store/slices/authSlice';
 
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
@@ -28,6 +29,7 @@ export default function CheckoutSuccess() {
           const data = result.payload;
           if (type === 'wallet') {
             setSuccess(true);
+            dispatch(getProfile());
           } else if (data && data.order) {
             const order = data.order;
             setOrderInfo(order);
@@ -37,8 +39,10 @@ export default function CheckoutSuccess() {
             if (order && order.store) {
               dispatch(clearCart({ storeId: order.store }));
             }
+            dispatch(getProfile());
           } else {
             setSuccess(true);
+            dispatch(getProfile());
           }
         } else {
           setSuccess(false);
