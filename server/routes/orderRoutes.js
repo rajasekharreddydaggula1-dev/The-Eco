@@ -7,7 +7,8 @@ const {
   getOrders,
   updateOrderStatus,
   cancelOrder,
-  returnOrder
+  returnOrder,
+  getOrderBySessionId
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 const { resolveTenant, requireTenant } = require('../middleware/tenant');
@@ -20,6 +21,9 @@ router.post('/confirm-payment', protect, confirmPayment);
 
 // Confirm mock payment for local development sandbox
 router.post('/confirm-mock-payment', protect, confirmMockPayment);
+
+// Get order by session ID
+router.get('/session/:sessionId', protect, getOrderBySessionId);
 
 // Get orders (scoped based on logged in user's role)
 router.get('/', protect, getOrders);

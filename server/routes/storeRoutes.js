@@ -4,6 +4,7 @@ const {
   getStores,
   getStoreBySlug,
   getStore,
+  createStore,
   updateStore,
   toggleStoreStatus
 } = require('../controllers/storeController');
@@ -13,7 +14,8 @@ router.get('/', getStores);
 router.get('/slug/:slug', getStoreBySlug);
 router.get('/:id', getStore);
 
-// Protected update routes
+// Protected routes
+router.post('/', protect, createStore);
 router.put('/:id', protect, updateStore);
 router.put('/:id/status', protect, authorize('Super Admin'), toggleStoreStatus);
 

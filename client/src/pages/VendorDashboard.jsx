@@ -9,6 +9,7 @@ import {
 import { logout } from '../store/slices/authSlice';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../store/slices/productSlice';
 import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
+import { fetchStores } from '../store/slices/storeSlice';
 import Logo from '../components/Logo';
 
 export default function VendorDashboard() {
@@ -36,6 +37,20 @@ export default function VendorDashboard() {
   const [variantsList, setVariantsList] = useState([]);
   const [newVariant, setNewVariant] = useState({ name: '', price: '', stock: '' });
 
+  // Store switcher & multiple stores state
+  const { stores } = useSelector(state => state.stores);
+  const myStores = stores.filter(s => s.vendor && (s.vendor === user?.id || s.vendor._id === user?.id || s.vendor === user?._id || s.vendor._id === user?._id));
+  const [selectedStoreId, setSelectedStoreId] = useState(localStorage.getItem('vendor_selected_store') || user?.store || '');
+  const [showAddStoreModal, setShowAddStoreModal] = useState(false);
+  const [newStoreForm, setNewStoreForm] = useState({
+    name: '',
+    description: '',
+    logo: '',
+    banner: ''
+  });
+  const [addStoreSaving, setAddStoreSaving] = useState(false);
+  const [addStoreMessage, setAddStoreMessage] = useState('');
+
   // Store profile settings form
   const [storeForm, setStoreForm] = useState({
     name: '',
@@ -53,18 +68,20 @@ export default function VendorDashboard() {
     }
   }, [user, navigate]);
 
-  const loadDashboardData = async () => {
-    if (!user || !user.store) return;
+  const loadDashboardData = async (storeId) => {
+    const targetStoreId = storeId || selectedStoreId;
+    if (!user || !targetStoreId) return;
 
-    dispatch(fetchProducts({ tenantId: user.store }));
-    dispatch(fetchOrders());
+    dispatch(fetchProducts({ tenantId: targetStoreId }));
+    dispatch(fetchOrders({ tenantId: targetStoreId }));
 
     // Fetch vendor specific analytics
     try {
       const token = localStorage.getItem('eco_token');
       const response = await fetch('/api/analytics', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'x-tenant-id': targetStoreId
         }
       });
       const data = await response.json();
@@ -79,16 +96,35 @@ export default function VendorDashboard() {
   };
 
   useEffect(() => {
-    loadDashboardData();
-    if (user && user.storeDetails) {
-      setStoreForm({
-        name: user.storeDetails.name || '',
-        description: user.storeDetails.description || '',
-        logo: user.storeDetails.logo || '',
-        banner: user.storeDetails.banner || ''
-      });
+    dispatch(fetchStores());
+  }, [dispatch]);
+
+  // Sync selectedStoreId when user loads or stores load
+  useEffect(() => {
+    if (!selectedStoreId && myStores.length > 0) {
+      const firstStoreId = myStores[0]._id;
+      setSelectedStoreId(firstStoreId);
+      localStorage.setItem('vendor_selected_store', firstStoreId);
+    } else if (!selectedStoreId && user && user.store) {
+      setSelectedStoreId(user.store);
+      localStorage.setItem('vendor_selected_store', user.store);
     }
-  }, [user]);
+  }, [user, myStores, selectedStoreId]);
+
+  useEffect(() => {
+    if (selectedStoreId) {
+      loadDashboardData(selectedStoreId);
+      const activeStore = myStores.find(s => s._id === selectedStoreId);
+      if (activeStore) {
+        setStoreForm({
+          name: activeStore.name || '',
+          description: activeStore.description || '',
+          logo: activeStore.logo || '',
+          banner: activeStore.banner || ''
+        });
+      }
+    }
+  }, [selectedStoreId, stores]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -127,12 +163,12 @@ export default function VendorDashboard() {
       await dispatch(updateProduct({ 
         id: editingProduct._id, 
         productData: productPayload, 
-        tenantId: user.store 
+        tenantId: selectedStoreId 
       }));
     } else {
       await dispatch(createProduct({ 
         productData: productPayload, 
-        tenantId: user.store 
+        tenantId: selectedStoreId 
       }));
     }
 
@@ -159,7 +195,7 @@ export default function VendorDashboard() {
 
   const handleDeleteProduct = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      await dispatch(deleteProduct({ id, tenantId: user.store }));
+      await dispatch(deleteProduct({ id, tenantId: selectedStoreId }));
       loadDashboardData();
     }
   };
@@ -178,7 +214,7 @@ export default function VendorDashboard() {
 
     try {
       const token = localStorage.getItem('eco_token');
-      const response = await fetch(`/api/stores/${user.store}`, {
+      const response = await fetch(`/api/stores/${selectedStoreId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,6 +225,7 @@ export default function VendorDashboard() {
       const data = await response.json();
       if (response.ok) {
         setStoreMessage('Store settings updated successfully!');
+        dispatch(fetchStores());
       } else {
         setStoreMessage(data.message || 'Failed to update settings');
       }
@@ -199,16 +236,148 @@ export default function VendorDashboard() {
     }
   };
 
+  // Onboard new vendor-owned store
+  const handleCreateVendorStore = async (e) => {
+    e.preventDefault();
+    setAddStoreSaving(true);
+    setAddStoreMessage('');
+
+    try {
+      const token = localStorage.getItem('eco_token');
+      const response = await fetch('/api/stores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newStoreForm)
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setAddStoreMessage('Storefront successfully created!');
+        setNewStoreForm({ name: '', description: '', logo: '', banner: '' });
+        
+        await dispatch(fetchStores());
+        
+        const newStoreId = data.data._id;
+        setSelectedStoreId(newStoreId);
+        localStorage.setItem('vendor_selected_store', newStoreId);
+
+        setTimeout(() => {
+          setShowAddStoreModal(false);
+          setAddStoreMessage('');
+        }, 1500);
+      } else {
+        setAddStoreMessage(data.message || 'Failed to create storefront');
+      }
+    } catch (err) {
+      console.error(err);
+      setAddStoreMessage('Network error creating storefront.');
+    } finally {
+      setAddStoreSaving(false);
+    }
+  };
+
   if (!user || user.role !== 'Vendor') return null;
 
+  if (myStores.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-xs font-sans">
+        <div className="max-w-md w-full rounded-2xl border border-slate-900 bg-slate-950/60 p-8 backdrop-blur-md space-y-6">
+          <div className="text-center space-y-3">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-eco-500/10 border border-eco-500/20 text-eco-400">
+              <Building className="h-6 w-6" />
+            </div>
+            <h2 className="text-lg font-bold text-white tracking-tight">Onboard Your First Eco Storefront</h2>
+            <p className="text-slate-400 leading-relaxed font-sans">
+              Launch your eco-merchant brand! Set up a custom directory listing on our database partitioned multi-tenant SaaS marketplace.
+            </p>
+          </div>
+
+          {addStoreMessage && (
+            <div className={`rounded-lg p-3 border text-[10px] font-semibold text-center font-sans ${
+              addStoreMessage.includes('successfully') ? 'bg-emerald-950/20 border-emerald-500/20 text-emerald-400' : 'bg-red-950/20 border-red-500/20 text-red-400'
+            }`}>
+              {addStoreMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleCreateVendorStore} className="space-y-4 text-xs font-sans">
+            <div className="space-y-1">
+              <label className="text-slate-400 font-medium font-sans">Storefront Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Green Planet Seeds"
+                value={newStoreForm.name}
+                onChange={(e) => setNewStoreForm({ ...newStoreForm, name: e.target.value })}
+                className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-white placeholder-slate-600 focus:border-eco-500 focus:outline-none font-sans"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-slate-400 font-medium font-sans">Description</label>
+              <textarea
+                required
+                placeholder="Tell buyers about your merchant story, organic practices, and green mission..."
+                value={newStoreForm.description}
+                onChange={(e) => setNewStoreForm({ ...newStoreForm, description: e.target.value })}
+                className="w-full h-24 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-white placeholder-slate-600 focus:border-eco-500 focus:outline-none resize-none font-sans"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={addStoreSaving}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-eco-600 hover:bg-eco-500 py-2.5 font-bold text-white shadow-md transition-all active:scale-95 disabled:scale-100 font-sans"
+            >
+              {addStoreSaving ? 'Creating Storefront...' : 'Launch Storefront Brand'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row text-xs">
+    <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row text-xs font-sans">
       {/* Sidebar Navigation */}
       <div className="w-full md:w-64 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-900 p-6 flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-6">
             <Logo className="h-6 w-6" />
-            <span className="text-sm font-bold tracking-tight text-white uppercase">The Eco Vendor Portal</span>
+            <span className="text-sm font-bold tracking-tight text-white uppercase font-sans">The Eco Vendor Portal</span>
+          </div>
+
+          <div className="mb-6 space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block font-sans">Active Storefront</label>
+            <div className="flex gap-1.5">
+              <select
+                value={selectedStoreId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedStoreId(id);
+                  localStorage.setItem('vendor_selected_store', id);
+                }}
+                className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2 py-1.5 text-xs text-white font-semibold focus:outline-none font-sans"
+              >
+                {myStores.map(store => (
+                  <option key={store._id} value={store._id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  setShowAddStoreModal(true);
+                  setAddStoreMessage('');
+                }}
+                className="rounded-lg bg-eco-600 hover:bg-eco-500 px-2.5 py-1.5 text-xs font-bold text-white transition-all shadow-md active:scale-95 flex items-center justify-center font-sans"
+                title="Add Another Storefront"
+              >
+                +
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -255,12 +424,12 @@ export default function VendorDashboard() {
           <div className="mb-4">
             <span className="block font-semibold text-slate-300">{user.name}</span>
             <span className="block text-[10px] text-slate-500">{user.email}</span>
-            {user.storeDetails && (
+            {selectedStoreId && myStores.find(s => s._id === selectedStoreId) && (
               <a 
-                href={`/store/${user.storeDetails.slug}`} 
+                href={`/store/${myStores.find(s => s._id === selectedStoreId).slug}`} 
                 target="_blank" 
                 rel="noreferrer"
-                className="inline-block mt-2 font-medium text-eco-400 hover:text-eco-300 underline"
+                className="inline-block mt-2 font-medium text-eco-400 hover:text-eco-300 underline font-sans"
               >
                 View Storefront ↗
               </a>
@@ -742,6 +911,93 @@ export default function VendorDashboard() {
                   className="px-4 py-2 bg-eco-600 hover:bg-eco-500 text-white font-bold rounded-lg shadow-md transition-all"
                 >
                   Save Product
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Add Store Modal for Vendors */}
+      {showAddStoreModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowAddStoreModal(false)} />
+          <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl backdrop-blur-md transition-all animate-scale-up">
+            <div className="flex items-center justify-between border-b border-slate-900 pb-4 mb-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Building className="h-5 w-5 text-eco-400" />
+                Launch New Storefront Brand
+              </h3>
+              <button onClick={() => setShowAddStoreModal(false)} className="text-slate-400 hover:text-white font-sans">✕</button>
+            </div>
+
+            {addStoreMessage && (
+              <div className={`mb-4 rounded-lg p-3 border text-[10px] font-semibold text-center font-sans ${
+                addStoreMessage.includes('successfully') ? 'bg-emerald-950/20 border-emerald-500/20 text-emerald-400' : 'bg-red-950/20 border-red-500/20 text-red-400'
+              }`}>
+                {addStoreMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateVendorStore} className="space-y-4 text-xs font-sans">
+              <div className="space-y-1">
+                <label className="text-slate-400 font-medium font-sans">Storefront Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Earthly Goods"
+                  value={newStoreForm.name}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, name: e.target.value })}
+                  className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-white placeholder-slate-600 focus:border-eco-500 focus:outline-none font-sans"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-400 font-medium font-sans">Description</label>
+                <textarea
+                  required
+                  placeholder="Tell customers about this storefront brand..."
+                  value={newStoreForm.description}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, description: e.target.value })}
+                  className="w-full h-20 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-white placeholder-slate-600 focus:border-eco-500 focus:outline-none resize-none font-sans"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-400 font-medium font-sans">Logo Image URL (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=100"
+                  value={newStoreForm.logo}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, logo: e.target.value })}
+                  className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-white placeholder-slate-600 focus:border-eco-500 focus:outline-none font-sans"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-400 font-medium font-sans">Banner Image URL (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600"
+                  value={newStoreForm.banner}
+                  onChange={(e) => setNewStoreForm({ ...newStoreForm, banner: e.target.value })}
+                  className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-white placeholder-slate-600 focus:border-eco-500 focus:outline-none font-sans"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStoreModal(false)}
+                  className="flex-1 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 py-2.5 font-semibold text-slate-300 transition-all font-sans"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addStoreSaving}
+                  className="flex-1 rounded-lg bg-eco-600 hover:bg-eco-500 py-2.5 font-semibold text-white transition-all shadow-md flex items-center justify-center gap-1.5 font-sans"
+                >
+                  {addStoreSaving ? 'Creating...' : 'Launch Brand'}
                 </button>
               </div>
             </form>

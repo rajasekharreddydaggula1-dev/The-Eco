@@ -234,3 +234,15 @@ exports.rechargeWallet = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Get all vendors
+// @route   GET /api/auth/vendors
+// @access  Private (Super Admin)
+exports.getVendors = async (req, res) => {
+  try {
+    const vendors = await User.find({ role: 'Vendor' }).select('name email store status');
+    res.status(200).json({ success: true, count: vendors.length, data: vendors });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -12,6 +12,7 @@ import ProductDetails from './pages/ProductDetails';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import VendorDashboard from './pages/VendorDashboard';
 import CheckoutSuccess from './pages/CheckoutSuccess';
+import PaymentGateway from './pages/PaymentGateway';
 import ProfilePage from './pages/ProfilePage';
 import { getProfile } from './store/slices/authSlice';
 
@@ -102,6 +103,7 @@ function AppContent() {
           <Route path="/admin" element={<SuperAdminDashboard />} />
 
           {/* Stripe / Mock Callbacks */}
+          <Route path="/checkout-payment" element={<PaymentGateway />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
 
           {/* Fallback */}

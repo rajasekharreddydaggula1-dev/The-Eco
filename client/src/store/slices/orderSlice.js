@@ -112,14 +112,16 @@ export const returnOrder = createAsyncThunk(
 
 export const fetchOrders = createAsyncThunk(
   'orders/fetchAll',
-  async (_, { getState, rejectWithValue }) => {
+  async (params = {}, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      const response = await fetch('/api/orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+      if (params && params.tenantId) {
+        headers['x-tenant-id'] = params.tenantId;
+      }
+      const response = await fetch('/api/orders', { headers });
       const data = await handleResponse(response);
       return data.data;
     } catch (e) {

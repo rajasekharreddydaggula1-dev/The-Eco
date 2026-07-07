@@ -116,3 +116,71 @@ exports.toggleStoreStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Create a new store
+// @route   POST /api/stores
+// @access  Private (Vendor/Super Admin)
+exports.createStore = async (req, res) => {
+  try {
+    const { name, description, logo, banner, vendor } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Please add a store name' });
+    }
+
+    // Determine target vendor ID
+    let vendorId;
+    if (req.user.role === 'Super Admin') {
+      if (!vendor) {
+        return res.status(400).json({ success: false, message: 'Please specify a vendor owner for this store' });
+      }
+      vendorId = vendor;
+    } else if (req.user.role === 'Vendor') {
+      vendorId = req.user.id;
+    } else {
+      return res.status(403).json({ success: false, message: 'Only vendors or super admins can create stores' });
+    }
+
+    // Verify vendor user exists
+    const vendorUser = await User.findById(vendorId);
+    if (!vendorUser) {
+      return res.status(404).json({ success: false, message: 'Vendor user not found' });
+    }
+
+    if (vendorUser.role !== 'Vendor') {
+      return res.status(400).json({ success: false, message: 'Assigned owner must have the Vendor role' });
+    }
+
+    // Generate slug
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+    // Check if store name or slug exists
+    const storeExists = await Store.findOne({ $or: [{ name }, { slug }] });
+    if (storeExists) {
+      return res.status(400).json({ success: false, message: 'Store name or slug is already taken' });
+    }
+
+    const store = await Store.create({
+      name,
+      slug,
+      description: description || '',
+      logo: logo || '',
+      banner: banner || '',
+      vendor: vendorId,
+      status: 'active'
+    });
+
+    // Update vendor user with store ID if they don't have one
+    if (!vendorUser.store) {
+      vendorUser.store = store._id;
+      await vendorUser.save();
+    }
+
+    res.status(201).json({ success: true, data: store });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

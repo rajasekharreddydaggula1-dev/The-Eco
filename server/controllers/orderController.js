@@ -153,21 +153,17 @@ exports.createCheckoutSession = async (req, res) => {
         await Order.findByIdAndDelete(order._id);
         return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
       }
-      user.walletBalance -= totalAmount;
-      await user.save();
 
       const mockSessionId = `mock_wallet_${Date.now()}_${order._id}`;
       order.stripeSessionId = mockSessionId;
-      order.status = 'paid';
-      order.paymentDetails = { transactionId: `WT-${Date.now()}` };
+      order.status = 'pending';
+      order.paymentDetails = {};
       await order.save();
-
-      await deductStock(order.items);
 
       return res.status(200).json({
         success: true,
         mock: true,
-        url: `/checkout-success?session_id=${mockSessionId}&payment_method=Wallet`
+        url: `/checkout-payment?session_id=${mockSessionId}&payment_method=Wallet`
       });
     }
 
@@ -190,17 +186,15 @@ exports.createCheckoutSession = async (req, res) => {
     // Fallback Mock Mode for Card, UPI, Net Banking, or Stripe when Stripe is not configured
     const mockSessionId = `mock_${chosenMethod.toLowerCase().replace(' ', '_')}_${Date.now()}_${order._id}`;
     order.stripeSessionId = mockSessionId;
-    order.status = 'paid';
+    order.status = 'pending';
     order.paymentDetails = paymentDetails || {};
     await order.save();
-
-    await deductStock(order.items);
 
     return res.status(200).json({
       success: true,
       mock: true,
       sessionId: mockSessionId,
-      url: `/checkout-success?session_id=${mockSessionId}&payment_method=${encodeURIComponent(chosenMethod)}`
+      url: `/checkout-payment?session_id=${mockSessionId}&payment_method=${encodeURIComponent(chosenMethod)}`
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -232,14 +226,28 @@ exports.confirmPayment = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Order not found for session' });
       }
 
+      let walletBalance;
       if (order.status === 'pending' && order.paymentMethod !== 'COD') {
+        if (order.paymentMethod === 'Wallet') {
+          const user = await User.findById(req.user.id).select('+password');
+          if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+          }
+          if (user.walletBalance < order.totalAmount) {
+            return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+          }
+          user.walletBalance -= order.totalAmount;
+          await user.save();
+          walletBalance = user.walletBalance;
+          order.paymentDetails = { transactionId: `WT-${Date.now()}` };
+        }
         order.status = 'paid';
         await order.save();
         await deductStock(order.items);
         console.log(`[MOCK EMAIL] To: ${req.user.email} - Order ${order._id} paid successfully via Mock Payment.`);
       }
 
-      return res.status(200).json({ success: true, message: 'Mock payment verified successfully', order });
+      return res.status(200).json({ success: true, message: 'Mock payment verified successfully', order, walletBalance });
     }
 
     // 2. Handle Real Stripe session
@@ -401,7 +409,19 @@ exports.getOrders = async (req, res) => {
       query.customer = req.user.id;
     } else if (req.user.role === 'Vendor') {
       // Vendors see orders belonging to their store
-      query.store = req.user.store;
+      const selectedStoreId = req.headers['x-tenant-id'];
+      if (selectedStoreId) {
+        const store = await Store.findById(selectedStoreId);
+        if (store && store.vendor.toString() === req.user.id) {
+          query.store = selectedStoreId;
+        } else {
+          return res.status(403).json({ success: false, message: 'Not authorized for this store' });
+        }
+      } else {
+        const vendorStores = await Store.find({ vendor: req.user.id });
+        const storeIds = vendorStores.map(s => s._id);
+        query.store = { $in: storeIds };
+      }
     } else if (req.user.role === 'Super Admin') {
       // Super Admins see all orders on the platform
       query = {};
@@ -517,6 +537,27 @@ exports.returnOrder = async (req, res) => {
       order,
       walletBalance: req.user.walletBalance 
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get order details by session ID
+// @route   GET /api/orders/session/:sessionId
+// @access  Private (Customer)
+exports.getOrderBySessionId = async (req, res) => {
+  try {
+    const order = await Order.findOne({ stripeSessionId: req.params.sessionId })
+      .populate('store', 'name slug logo')
+      .populate('customer', 'name email');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found for this checkout session ID' });
+    }
+    // Verify customer owns the order
+    if (order.customer._id.toString() !== req.user.id && req.user.role !== 'Super Admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to view this order' });
+    }
+    res.status(200).json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
