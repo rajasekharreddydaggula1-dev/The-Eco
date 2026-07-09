@@ -70,6 +70,16 @@ export default function Navbar({
             
             {/* Left Block: Back Button, Brand Logo & Store details */}
             <div className="flex items-center gap-3.5 flex-shrink-0">
+              {/* Menu Button - Opens navigation drawer */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex items-center gap-1.5 text-slate-200 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 px-3 py-1.5 rounded-lg transition-all cursor-pointer font-bold text-xs"
+                title="Open Navigation Menu"
+              >
+                <Menu className="h-3.5 w-3.5 text-amber-500" />
+                <span className="hidden sm:inline">Menu</span>
+              </button>
+
               {/* Back Button - Conditionally displayed on all inner paths */}
               {location.pathname !== '/' && (
                 <button
@@ -320,14 +330,7 @@ export default function Navbar({
                 </Link>
               )}
 
-              {/* Hamburger Mobile Menu Trigger (Mobile Only) */}
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="flex md:hidden p-2 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                title="Open Navigation Menu"
-              >
-                <Menu className="h-6 w-6" />
-              </button>
+
 
             </div>
           </div>
@@ -376,9 +379,9 @@ export default function Navbar({
         </div>
       </header>
 
-      {/* Slide-out Mobile Navigation Drawer Backdrop */}
+      {/* Slide-out Navigation Drawer Backdrop */}
       <div 
-        className={`fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${
           mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`} 
         onClick={() => setMobileMenuOpen(false)} 
@@ -386,8 +389,8 @@ export default function Navbar({
       
       {/* Slide-out Drawer Panel */}
       <div 
-        className={`fixed top-0 right-0 bottom-0 z-50 w-72 max-w-[80vw] bg-slate-900 border-l border-slate-800 shadow-2xl p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out md:hidden ${
-          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 left-0 bottom-0 z-50 w-72 max-w-[80vw] bg-slate-900 border-r border-slate-800 shadow-2xl p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div>
