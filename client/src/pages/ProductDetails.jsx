@@ -197,6 +197,59 @@ export default function ProductDetails() {
               {/* Description */}
               <p className="text-xs text-slate-400 leading-relaxed">{currentProduct.description}</p>
 
+              {/* Sustainability Score Card */}
+              {currentProduct.ecoScore !== undefined && (
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/15 p-4 space-y-3 backdrop-blur-md">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider flex items-center gap-1.5">
+                      <span className="animate-bounce">🍃</span> Ecological Credentials
+                    </span>
+                    <span className="rounded-full bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                      Eco Score: {currentProduct.ecoScore}%
+                    </span>
+                  </div>
+
+                  {/* Circular / Progress Indicator */}
+                  <div className="space-y-1.5">
+                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: `${currentProduct.ecoScore}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[9px] text-slate-500 font-medium">
+                      <span>Low Sustainability</span>
+                      <span>Carbon Neutral Target</span>
+                    </div>
+                  </div>
+
+                  {/* CO2 Savings Indicator */}
+                  {currentProduct.carbonOffset !== undefined && (
+                    <div className="flex items-center gap-2 text-xs text-slate-300 font-semibold bg-slate-950/40 p-2.5 rounded-lg border border-slate-900">
+                      <span className="text-lg">🌳</span>
+                      <div>
+                        <p className="text-[10px] text-slate-500 leading-none">Carbon Emissions Offset</p>
+                        <p className="text-white font-extrabold mt-0.5">Saves {currentProduct.carbonOffset} kg of CO₂ emissions</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Eco-Features List */}
+                  {currentProduct.ecoFeatures && currentProduct.ecoFeatures.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1.5">
+                      {currentProduct.ecoFeatures.map((feat, idx) => (
+                        <span 
+                          key={idx} 
+                          className="rounded-full bg-emerald-950/40 border border-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-400 uppercase tracking-tight"
+                        >
+                          ✓ {feat}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Variants Selector */}
               {hasVariants && (
                 <div className="space-y-3 pt-4 border-t border-slate-900">

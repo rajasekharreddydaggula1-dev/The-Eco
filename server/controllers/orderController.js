@@ -24,12 +24,63 @@ const deductStock = async (items) => {
   }
 };
 
+// Helper to reward user eco points and carbon saved
+const rewardUserEcoPoints = async (order) => {
+  try {
+    const user = await User.findById(order.customer);
+    if (!user) return;
+
+    if (order.ecoPointsRewarded) return;
+
+    let pointsEarned = 0;
+    let carbonSaved = 0;
+
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+      const score = product?.ecoScore || 75;
+      const offset = product?.carbonOffset || 1.2;
+
+      pointsEarned += Math.round((item.price * item.quantity * (score / 100) * 0.05));
+      carbonSaved += (offset * item.quantity);
+    }
+
+    if (order.shippingType === 'Eco-Friendly') {
+      pointsEarned += 10;
+      carbonSaved += 1.5;
+    }
+
+    if (order.plantTree) {
+      user.treesPlanted = (user.treesPlanted || 0) + 1;
+      carbonSaved += 22.0; // Mature tree offsets ~22kg CO2 yearly
+    }
+
+    user.ecoPoints = (user.ecoPoints || 0) + pointsEarned;
+    user.carbonSaved = (user.carbonSaved || 0) + Math.round(carbonSaved * 10) / 10;
+    await user.save();
+
+    const store = await Store.findById(order.store);
+    if (store) {
+      store.carbonSaved = (store.carbonSaved || 0) + Math.round(carbonSaved * 10) / 10;
+      await store.save();
+    }
+
+    order.ecoPointsRewarded = true;
+    order.ecoPointsEarned = pointsEarned;
+    order.carbonSaved = Math.round(carbonSaved * 10) / 10;
+    await order.save();
+
+    console.log(`[ECO REWARDS] Customer ${user.name} earned ${pointsEarned} Eco-Points, saved ${carbonSaved}kg CO2! Total Trees: ${user.treesPlanted}`);
+  } catch (err) {
+    console.error('Failed to reward eco points:', err);
+  }
+};
+
 // @desc    Create Stripe Checkout Session and Pending Order
 // @route   POST /api/orders/checkout
 // @access  Private (Customer)
 exports.createCheckoutSession = async (req, res) => {
   try {
-    const { items, shippingAddress, paymentMethod, paymentDetails } = req.body;
+    const { items, shippingAddress, paymentMethod, paymentDetails, shippingType, plantTree } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Cart is empty' });
@@ -92,13 +143,48 @@ exports.createCheckoutSession = async (req, res) => {
       });
     }
 
+    // Add shipping cost (Express = ₹80, Eco-Friendly = ₹0)
+    const shippingCost = shippingType === 'Express' ? 80 : 0;
+    if (shippingType === 'Express') {
+      stripeLineItems.push({
+        price_data: {
+          currency: 'inr',
+          product_data: {
+            name: 'Express Delivery Shipping',
+            description: 'Fast shipping charge'
+          },
+          unit_amount: 80 * 100
+        },
+        quantity: 1
+      });
+    }
+
+    // Add tree planting donation (₹50)
+    if (plantTree) {
+      stripeLineItems.push({
+        price_data: {
+          currency: 'inr',
+          product_data: {
+            name: 'Plant a Tree Donation',
+            description: 'Plant a tree via The Green Initiative'
+          },
+          unit_amount: 50 * 100
+        },
+        quantity: 1
+      });
+    }
+
+    const finalAmount = totalAmount + shippingCost + (plantTree ? 50 : 0);
+
     // Create the pending order in database
     const order = await Order.create({
       store: req.tenantId,
       customer: req.user.id,
       items: orderItems,
-      totalAmount,
+      totalAmount: finalAmount,
       status: 'pending',
+      shippingType: shippingType || 'Eco-Friendly',
+      plantTree: !!plantTree,
       shippingAddress: shippingAddress || {
         street: '123 Main St',
         city: 'Sample City',
@@ -244,6 +330,7 @@ exports.confirmPayment = async (req, res) => {
         order.status = 'paid';
         await order.save();
         await deductStock(order.items);
+        await rewardUserEcoPoints(order);
         console.log(`[MOCK EMAIL] To: ${req.user.email} - Order ${order._id} paid successfully via Mock Payment.`);
       }
 
@@ -302,6 +389,7 @@ exports.confirmPayment = async (req, res) => {
         order.status = 'paid';
         await order.save();
         await deductStock(order.items);
+        await rewardUserEcoPoints(order);
 
         // Fetch customer email
         const user = await User.findById(order.customer);
@@ -380,6 +468,7 @@ exports.stripeWebhook = async (req, res) => {
 
             // Adjust stock
             await deductStock(order.items);
+            await rewardUserEcoPoints(order);
 
             // Fetch customer email
             const user = await User.findById(order.customer);

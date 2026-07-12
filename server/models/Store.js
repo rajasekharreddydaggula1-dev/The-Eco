@@ -36,6 +36,14 @@ const storeSchema = new mongoose.Schema({
     enum: ['active', 'suspended'],
     default: 'active'
   },
+  carbonSaved: {
+    type: Number,
+    default: 0
+  },
+  ecoScore: {
+    type: Number,
+    default: () => Math.floor(Math.random() * 15) + 80 // 80-94
+  },
   createdAt: {
     type: Date,
     default: Date.now

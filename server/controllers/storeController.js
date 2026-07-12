@@ -184,3 +184,33 @@ exports.createStore = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Get Eco Leaderboard (Top Customers and Top Stores)
+// @route   GET /api/stores/eco-leaderboard
+// @access  Public
+exports.getEcoLeaderboard = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const Store = require('../models/Store');
+
+    const topCustomers = await User.find({ role: 'Customer' })
+      .sort({ treesPlanted: -1, carbonSaved: -1 })
+      .select('name carbonSaved treesPlanted ecoPoints')
+      .limit(5);
+
+    const topStores = await Store.find({ status: 'active' })
+      .sort({ carbonSaved: -1 })
+      .select('name slug logo banner carbonSaved ecoScore')
+      .limit(5);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        topCustomers,
+        topStores
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

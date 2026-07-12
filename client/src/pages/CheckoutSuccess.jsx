@@ -131,6 +131,32 @@ export default function CheckoutSuccess() {
                   </div>
                 )}
 
+                {/* Eco rewards block */}
+                {orderInfo && (orderInfo.ecoPointsEarned > 0 || orderInfo.carbonSaved > 0) && (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/10 p-4 text-left space-y-3">
+                    <h3 className="text-xs font-bold text-emerald-450 flex items-center gap-1.5 uppercase tracking-wider">
+                      <span>🍃</span> The Green Initiative Rewards
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="bg-slate-950/60 border border-slate-900 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+                        <span className="text-lg">✨</span>
+                        <p className="text-[10px] text-slate-500 mt-1 font-semibold">Eco-Points Earned</p>
+                        <p className="text-white font-extrabold text-sm mt-0.5">+{orderInfo.ecoPointsEarned} pts</p>
+                      </div>
+                      <div className="bg-slate-950/60 border border-slate-900 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+                        <span className="text-lg">🌳</span>
+                        <p className="text-[10px] text-slate-500 mt-1 font-semibold">Carbon Offset Saved</p>
+                        <p className="text-white font-extrabold text-sm mt-0.5">-{orderInfo.carbonSaved} kg CO₂</p>
+                      </div>
+                    </div>
+                    {orderInfo.plantTree && (
+                      <div className="rounded-lg bg-emerald-950/40 border border-emerald-500/25 p-2 text-center text-[10px] font-bold text-emerald-350">
+                        🎉 Certificate Issued: 1 Tree Planted! Check your profile garden to watch it grow.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1.5 justify-center rounded-full bg-emerald-500/5 border border-emerald-500/10 px-3 py-1 text-[10px] text-emerald-400 max-w-fit mx-auto">
                   <ShieldCheck className="h-4 w-4" />
                   <span>Secure isolation transaction</span>

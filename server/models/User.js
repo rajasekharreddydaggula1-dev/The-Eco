@@ -47,6 +47,18 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  ecoPoints: {
+    type: Number,
+    default: 0
+  },
+  carbonSaved: {
+    type: Number,
+    default: 0
+  },
+  treesPlanted: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now

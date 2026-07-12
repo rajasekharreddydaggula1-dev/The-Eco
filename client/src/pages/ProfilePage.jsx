@@ -16,6 +16,64 @@ export default function ProfilePage() {
   const [walletOpen, setWalletOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
 
+  const ecoTips = [
+    "A single mature tree absorbs about 22kg of carbon dioxide per year! 🌳",
+    "Bamboo is one of the fastest-growing plants on earth, absorbing tons of CO₂! 🎋",
+    "Trees release organic compounds that can help improve human immunity. 🌲",
+    "Planting trees helps stabilize soil and prevents erosion in local ecosystems. 🌿",
+    "Trees in forests communicate and share resources through a network of fungi! 🍄",
+    "Mangroves sequester carbon at rates up to 4 times greater than terrestrial forests! 🌊",
+    "Urban trees can cool cities by up to 8°C by providing shade and evapotranspiration! 🏙️"
+  ];
+
+  const [activeTip, setActiveTip] = useState(ecoTips[0]);
+
+  const renderTreeSVG = (type, index) => {
+    switch (type) {
+      case 'oak':
+        return (
+          <svg key={index} className="w-12 h-16 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" viewBox="0 0 100 120">
+            <rect x="44" y="70" width="12" height="40" rx="3" fill="#78350f" />
+            <circle cx="50" cy="45" r="30" fill="#047857" />
+            <circle cx="35" cy="50" r="22" fill="#065f46" />
+            <circle cx="65" cy="50" r="22" fill="#065f46" />
+            <circle cx="50" cy="30" r="22" fill="#10b981" />
+          </svg>
+        );
+      case 'pine':
+        return (
+          <svg key={index} className="w-10 h-16 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" viewBox="0 0 100 120">
+            <rect x="45" y="80" width="10" height="30" rx="2" fill="#451a03" />
+            <polygon points="50,15 20,60 80,60" fill="#064e3b" />
+            <polygon points="50,30 25,70 75,70" fill="#0f766e" />
+            <polygon points="50,45 30,85 70,85" fill="#14b8a6" />
+          </svg>
+        );
+      case 'bamboo':
+        return (
+          <svg key={index} className="w-8 h-16 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" viewBox="0 0 80 120">
+            <rect x="36" y="10" width="8" height="25" rx="1" fill="#065f46" />
+            <rect x="36" y="38" width="8" height="25" rx="1" fill="#047857" />
+            <rect x="36" y="66" width="8" height="25" rx="1" fill="#10b981" />
+            <rect x="36" y="94" width="8" height="20" rx="1" fill="#34d399" />
+            <line x1="34" y1="36" x2="46" y2="36" stroke="#064e3b" strokeWidth="2" />
+            <line x1="34" y1="64" x2="46" y2="64" stroke="#064e3b" strokeWidth="2" />
+            <line x1="34" y1="92" x2="46" y2="92" stroke="#064e3b" strokeWidth="2" />
+            <path d="M 44,20 C 55,15 60,18 60,18 C 60,18 52,24 44,22 Z" fill="#10b981" />
+            <path d="M 36,48 C 25,43 20,46 20,46 C 20,46 28,52 36,50 Z" fill="#047857" />
+          </svg>
+        );
+      default:
+        return (
+          <svg key={index} className="w-8 h-10 hover:scale-110 transition-transform cursor-pointer drop-shadow-md animate-bounce" viewBox="0 0 60 80">
+            <path d="M 30,75 Q 30,40 45,25" fill="none" stroke="#78350f" strokeWidth="3" strokeLinecap="round" />
+            <path d="M 45,25 C 50,10 35,5 35,5 C 35,5 32,18 45,25 Z" fill="#34d399" />
+            <path d="M 30,45 C 15,35 10,48 10,48 C 10,48 22,50 30,45 Z" fill="#059669" />
+          </svg>
+        );
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -110,6 +168,103 @@ export default function ProfilePage() {
             Logout Account
           </button>
         </div>
+
+        {/* GREEN FOREST WIDGET */}
+        {user?.role === 'Customer' && (
+          <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-6 space-y-6 backdrop-blur-md relative overflow-hidden animate-fade-in-up">
+            <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-emerald-500/5 blur-2xl animate-pulse" />
+            <div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-teal-500/5 blur-2xl animate-pulse" />
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 className="text-base font-extrabold text-white tracking-tight flex items-center gap-2">
+                  <span>🌳</span> My Virtual Eco-Forest
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Your carbon-offsetting forest grows as you make sustainable purchases and check the "Plant a Tree" box!
+                </p>
+              </div>
+
+              {/* Eco Stats breakdown */}
+              <div className="flex flex-wrap gap-3">
+                <div className="rounded-xl bg-slate-900/60 border border-slate-850 px-4 py-2.5 flex items-center gap-3">
+                  <span className="text-xl">✨</span>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-slate-500">Eco-Points</p>
+                    <p className="text-sm font-extrabold text-white">{user.ecoPoints || 0}</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-900/60 border border-slate-850 px-4 py-2.5 flex items-center gap-3">
+                  <span className="text-xl">🌱</span>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-slate-500">CO₂ Offset</p>
+                    <p className="text-sm font-extrabold text-emerald-450">{(user.carbonSaved || 0).toFixed(1)} kg</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-900/60 border border-slate-850 px-4 py-2.5 flex items-center gap-3">
+                  <span className="text-xl">🌳</span>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-slate-500">Trees Planted</p>
+                    <p className="text-sm font-extrabold text-white">{user.treesPlanted || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Speech bubble tip */}
+            {activeTip && (
+              <div className="relative bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-3.5 text-xs text-emerald-350 max-w-2xl animate-fade-in-up">
+                <div className="absolute -bottom-2 left-6 w-3 h-3 bg-slate-950 border-r border-b border-emerald-500/20 transform rotate-45" />
+                <span className="font-bold mr-1">💡 Eco Fact:</span> {activeTip}
+              </div>
+            )}
+
+            {/* Forest Landscape Garden */}
+            <div className="relative min-h-[160px] rounded-xl border border-slate-900 bg-slate-950/40 p-4 flex flex-col justify-end overflow-hidden shadow-inner">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-emerald-950/10 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-4 bg-emerald-950/30 border-t border-emerald-500/10" />
+
+              <div className="relative z-10 flex flex-wrap items-end justify-center gap-4 px-4 pb-2 min-h-[120px]">
+                {!(user.treesPlanted > 0) ? (
+                  <div 
+                    onClick={() => setActiveTip(ecoTips[Math.floor(Math.random() * ecoTips.length)])}
+                    className="flex flex-col items-center justify-center text-center p-6 space-y-3 cursor-pointer"
+                  >
+                    {renderTreeSVG('sprout', 0)}
+                    <p className="text-[11px] text-slate-500 max-w-sm">
+                      Your eco-forest is empty. Purchase sustainable items or select <strong className="text-emerald-400">"Plant a Tree"</strong> at checkout to plant your first tree! Click me for an Eco Fact.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {Array.from({ length: user.treesPlanted }).slice(0, 24).map((_, idx) => {
+                      const treeTypes = ['oak', 'pine', 'bamboo'];
+                      const type = treeTypes[idx % treeTypes.length];
+                      return (
+                        <div 
+                          key={idx} 
+                          onClick={() => {
+                            const idxTip = (idx) % ecoTips.length;
+                            setActiveTip(ecoTips[idxTip]);
+                          }}
+                          className="transition-transform duration-300 transform origin-bottom hover:-translate-y-1"
+                          title={`Virtual ${type} tree. Click for fact.`}
+                        >
+                          {renderTreeSVG(type, idx)}
+                        </div>
+                      );
+                    })}
+                    {user.treesPlanted > 24 && (
+                      <div className="h-10 flex items-center justify-center rounded-full bg-slate-900/80 border border-slate-800 px-3 py-1.5 text-[10px] font-bold text-slate-400">
+                        + {user.treesPlanted - 24} more
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-6 md:grid-cols-3">
           {/* PROFILE SUMMARY COLUMN */}

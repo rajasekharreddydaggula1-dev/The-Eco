@@ -67,6 +67,27 @@ const orderSchema = new mongoose.Schema({
     postalCode: String,
     country: String
   },
+  shippingType: {
+    type: String,
+    enum: ['Eco-Friendly', 'Express'],
+    default: 'Eco-Friendly'
+  },
+  plantTree: {
+    type: Boolean,
+    default: false
+  },
+  ecoPointsEarned: {
+    type: Number,
+    default: 0
+  },
+  carbonSaved: {
+    type: Number,
+    default: 0
+  },
+  ecoPointsRewarded: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

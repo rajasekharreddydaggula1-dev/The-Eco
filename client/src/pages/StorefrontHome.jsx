@@ -19,11 +19,28 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
   const [searchTerm, setSearchTerm] = useState(searchParamTerm);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [leaderboard, setLeaderboard] = useState({ topCustomers: [], topStores: [] });
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
   // Sync searchParamTerm to state
   useEffect(() => {
     setSearchTerm(searchParamTerm);
   }, [searchParamTerm]);
+
+  useEffect(() => {
+    if (!storeSlug) {
+      setLeaderboardLoading(true);
+      fetch('/api/stores/eco-leaderboard')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setLeaderboard(data.data);
+          }
+        })
+        .catch(err => console.error("Error fetching eco leaderboard:", err))
+        .finally(() => setLeaderboardLoading(false));
+    }
+  }, [storeSlug]);
 
   // 1. Load Stores List if at root, or Load Specific Store details if storeSlug is present
   useEffect(() => {
@@ -171,8 +188,93 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
                       <ChevronRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1 duration-300" />
                     </div>
                   </div>
-                </Link>
+                 </Link>
               ))}
+            </div>
+          )}
+
+          {/* Eco Impact Leaderboard Section */}
+          {!leaderboardLoading && leaderboard && (leaderboard.topCustomers?.length > 0 || leaderboard.topStores?.length > 0) && (
+            <div className="border-t border-slate-900 pt-16 max-w-6xl mx-auto space-y-8 animate-fade-in-up">
+              <div className="text-center space-y-3 max-w-xl mx-auto">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold text-emerald-450 border border-emerald-500/20 shadow-sm backdrop-blur-md">
+                  <span>🌍</span> The Eco Initiative Community
+                </span>
+                <h2 className="text-2xl font-extrabold text-white tracking-tight">Platform Sustainability Leaderboard</h2>
+                <p className="text-xs text-slate-400">
+                  Tracking collective environmental impacts across our multi-tenant SaaS ecosystem. Meet our top carbon-saving partners and shoppers!
+                </p>
+              </div>
+
+              <div className="grid gap-8 md:grid-cols-2">
+                {/* Column 1: Top Customers */}
+                <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-6 space-y-4 backdrop-blur-md">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <span>👑</span> Top Green Shoppers
+                  </h3>
+                  <div className="space-y-3">
+                    {leaderboard.topCustomers.map((cust, idx) => {
+                      const trophy = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🌿';
+                      return (
+                        <div key={cust._id || idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-900/60 bg-slate-905/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{trophy}</span>
+                            <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] text-emerald-450 font-extrabold">
+                              {cust.name ? cust.name[0] : 'U'}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-white text-xs">{cust.name}</h4>
+                              <p className="text-[9px] text-slate-500">Eco Shopper Member</p>
+                            </div>
+                          </div>
+                          <div className="text-right text-[10px] font-semibold space-y-0.5">
+                            <p className="text-emerald-400 flex items-center gap-1 justify-end font-bold">
+                              <span>🌳</span> {cust.treesPlanted || 0} trees
+                            </p>
+                            <p className="text-slate-500 font-mono">{(cust.carbonSaved || 0).toFixed(1)}kg CO₂ saved</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Column 2: Top Stores */}
+                <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-6 space-y-4 backdrop-blur-md">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <span>🏬</span> Greenest Merchant Partners
+                  </h3>
+                  <div className="space-y-3">
+                    {leaderboard.topStores.map((store, idx) => {
+                      const trophy = idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🌱';
+                      return (
+                        <div key={store._id || idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-900/60 bg-slate-905/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{trophy}</span>
+                            <div className="h-8 w-8 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center flex-shrink-0">
+                              {store.logo ? (
+                                <img src={store.logo} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                <span className="font-bold text-white text-[10px]">{store.name[0]}</span>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-white text-xs">{store.name}</h4>
+                              <p className="text-[9px] text-slate-500 font-mono">/store/{store.slug}</p>
+                            </div>
+                          </div>
+                          <div className="text-right text-[10px] font-semibold space-y-0.5">
+                            <p className="text-emerald-400 flex items-center gap-1 justify-end font-bold">
+                              <span>🌱</span> {store.carbonSaved || 0}kg CO₂ saved
+                            </p>
+                            <p className="text-slate-500 font-mono">Eco Rating: {store.ecoScore || 85}%</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

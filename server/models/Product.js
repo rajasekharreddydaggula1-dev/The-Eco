@@ -50,6 +50,30 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
   variants: [variantSchema],
+  ecoScore: {
+    type: Number,
+    default: () => Math.floor(Math.random() * 33) + 65 // 65-97
+  },
+  carbonOffset: {
+    type: Number,
+    default: () => Math.round((Math.random() * 3.4 + 0.8) * 10) / 10 // 0.8 - 4.2 kg CO2 saved
+  },
+  ecoFeatures: {
+    type: [String],
+    default: function() {
+      const features = [
+        "Organic Sourced",
+        "Cruelty-Free Certified",
+        "Carbon-Neutral Production",
+        "Zero-Waste Packaging",
+        "Biodegradable Materials",
+        "Fair Trade Sourced",
+        "Water-Saving Manufacturing"
+      ];
+      const shuffled = [...features].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, Math.floor(Math.random() * 2) + 2);
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

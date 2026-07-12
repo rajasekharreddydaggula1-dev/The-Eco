@@ -59,11 +59,17 @@ export default function ProductCard({ product, storeSlug, onQuickAdded, index = 
         <span className="absolute top-3 left-3 rounded-full bg-slate-950/80 backdrop-blur-md px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-300 uppercase border border-slate-800 transition-transform duration-300 group-hover:scale-105">
           {product.category}
         </span>
+        {/* Eco Score Badge */}
+        {product.ecoScore !== undefined && (
+          <span className="absolute top-3 right-3 rounded-full bg-emerald-950/90 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold tracking-wider text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-sm transition-transform duration-300 group-hover:scale-105">
+            <span className="animate-pulse">🍃</span> {product.ecoScore}% Eco
+          </span>
+        )}
         {/* Out Of Stock Badge */}
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xs">
             <span className="rounded-lg bg-red-950/60 border border-red-500/30 px-3 py-1.5 text-xs font-bold text-red-400">
-              OUT OF STOCK
+               OUT OF STOCK
             </span>
           </div>
         )}
@@ -80,6 +86,11 @@ export default function ProductCard({ product, storeSlug, onQuickAdded, index = 
         <p className="mt-1.5 line-clamp-2 text-xs text-slate-400">
           {product.description}
         </p>
+        {product.carbonOffset !== undefined && (
+          <p className="text-[10px] font-bold text-emerald-500/80 mt-1 flex items-center gap-1">
+            <span>🌱</span> Saves {product.carbonOffset} kg CO₂
+          </p>
+        )}
 
         {/* Pricing / Stock */}
         <div className="mt-auto pt-4 flex items-center justify-between">

@@ -6,11 +6,13 @@ const {
   getStore,
   createStore,
   updateStore,
-  toggleStoreStatus
+  toggleStoreStatus,
+  getEcoLeaderboard
 } = require('../controllers/storeController');
 const { protect, authorize } = require('../middleware/auth');
 
 router.get('/', getStores);
+router.get('/eco-leaderboard', getEcoLeaderboard);
 router.get('/slug/:slug', getStoreBySlug);
 router.get('/:id', getStore);
 

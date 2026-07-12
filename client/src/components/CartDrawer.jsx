@@ -33,11 +33,15 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
   // Checkout Steps: 'cart', 'shipping', 'payment'
   const [step, setStep] = useState('cart');
   const [paymentMethod, setPaymentMethod] = useState('Wallet');
+  const [shippingType, setShippingType] = useState('Eco-Friendly');
+  const [plantTree, setPlantTree] = useState(false);
 
   // Reset steps on open/close
   useEffect(() => {
     setStep('cart');
     setValidationError('');
+    setShippingType('Eco-Friendly');
+    setPlantTree(false);
     dispatch(resetCheckout());
   }, [isOpen, selectedStoreId, dispatch]);
 
@@ -94,6 +98,10 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
     }
   };
 
+  const shippingCost = shippingType === 'Express' ? 80 : 0;
+  const treeCost = plantTree ? 50 : 0;
+  const grandTotal = subtotal + shippingCost + treeCost;
+
   const executeCheckout = async (chosenMethod, details) => {
     const itemsPayload = cartData.map(item => ({
       productId: item.productId,
@@ -106,7 +114,9 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
       shippingAddress: shipping,
       tenantId: selectedStoreId,
       paymentMethod: chosenMethod,
-      paymentDetails: details
+      paymentDetails: details,
+      shippingType,
+      plantTree
     }));
 
     if (checkoutCart.fulfilled.match(result)) {
@@ -133,7 +143,7 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
     let details = {};
     if (paymentMethod === 'Wallet') {
       const balance = user.walletBalance || 0;
-      if (balance < subtotal) {
+      if (balance < grandTotal) {
         setValidationError('Insufficient wallet balance. Please recharge or use another method.');
         return;
       }
@@ -162,7 +172,7 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
   // Top Up Wallet deficit and complete checkout instantly
   const handleTopUpAndPay = async () => {
     setValidationError('');
-    const deficit = subtotal - (user.walletBalance || 0);
+    const deficit = grandTotal - (user.walletBalance || 0);
     if (deficit <= 0) return;
 
     setLoadingLocal(true);
@@ -184,7 +194,7 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
   if (!isOpen) return null;
 
   const userBalance = user?.walletBalance || 0;
-  const isWalletInsufficient = userBalance < subtotal;
+  const isWalletInsufficient = userBalance < grandTotal;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden text-xs">
@@ -389,6 +399,62 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
                           </div>
                         </div>
                       </div>
+
+                      {/* Green Shipping Selection */}
+                      <div className="pt-4 border-t border-slate-900/50 space-y-2">
+                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Shipping Method</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShippingType('Eco-Friendly')}
+                            className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${
+                              shippingType === 'Eco-Friendly'
+                                ? 'bg-emerald-950/20 border-emerald-500/35 text-white shadow-md'
+                                : 'bg-slate-900/30 border-slate-900 text-slate-400 hover:border-slate-800'
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold text-emerald-450 flex items-center gap-1">🌱 Eco-Delivery</span>
+                            <span className="text-[9px] text-slate-500 leading-normal mt-0.5">Electric vehicles, optimized routing. (₹0, +10 points)</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShippingType('Express')}
+                            className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${
+                              shippingType === 'Express'
+                                ? 'bg-brand-900/10 border-brand-500/35 text-white shadow-md'
+                                : 'bg-slate-900/30 border-slate-900 text-slate-400 hover:border-slate-800'
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold text-slate-200">⚡ Express Delivery</span>
+                            <span className="text-[9px] text-slate-500 leading-normal mt-0.5">Fast highway/air shipping. (₹80, standard emissions)</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Plant a Tree Box */}
+                      <div className="pt-4 border-t border-slate-900/50">
+                        <label className={`flex items-center gap-3.5 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                          plantTree
+                            ? 'bg-emerald-950/20 border-emerald-500/35 text-white shadow-md'
+                            : 'bg-slate-900/30 border-slate-900 text-slate-400 hover:border-slate-850'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={plantTree}
+                            onChange={(e) => setPlantTree(e.target.checked)}
+                            className="accent-emerald-500 h-4.5 w-4.5 rounded cursor-pointer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold text-emerald-455 flex items-center gap-1.5">
+                              🌳 Plant a Real Tree (+₹50)
+                            </span>
+                            <p className="text-[9px] text-slate-500 leading-normal mt-0.5">
+                              We plant a tree in your name, which also adds a growing virtual tree to your garden profile! (+22kg CO₂ saved/yr)
+                            </p>
+                          </div>
+                        </label>
+                      </div>
                     </div>
                   )}
 
@@ -562,11 +628,26 @@ export default function CartDrawer({ isOpen, onClose, storeId }) {
             {/* Footer */}
             {selectedStoreId && cartData.length > 0 && (
               <div className="border-t border-slate-800 bg-slate-900/20 px-4 py-6 sm:px-6">
-                <div className="flex justify-between text-base font-semibold text-slate-100">
-                  <p>Subtotal</p>
-                  <p>₹{subtotal.toFixed(2)}</p>
+                <div className="space-y-1.5 pb-3 border-b border-slate-850 text-[10px] text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Items Subtotal</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery Shipping ({shippingType})</span>
+                    <span>₹{shippingCost.toFixed(2)}</span>
+                  </div>
+                  {plantTree && (
+                    <div className="flex justify-between text-emerald-450">
+                      <span>🌳 Tree Planting Donation</span>
+                      <span>₹50.00</span>
+                    </div>
+                  )}
                 </div>
-                <p className="mt-0.5 text-slate-500 text-[10px]">Taxes and delivery shipping invoiced at checkout.</p>
+                <div className="flex justify-between text-base font-semibold text-slate-100 mt-3">
+                  <p>Grand Total</p>
+                  <p className="text-emerald-405">₹{grandTotal.toFixed(2)}</p>
+                </div>
 
                 {validationError && (
                   <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/30 p-2.5 text-center text-red-400 font-bold">

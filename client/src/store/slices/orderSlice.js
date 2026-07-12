@@ -6,7 +6,7 @@ import { clearCart } from './cartSlice';
 // Thunks
 export const checkoutCart = createAsyncThunk(
   'orders/checkout',
-  async ({ items, shippingAddress, tenantId, paymentMethod, paymentDetails }, { getState, dispatch, rejectWithValue }) => {
+  async ({ items, shippingAddress, tenantId, paymentMethod, paymentDetails, shippingType, plantTree }, { getState, dispatch, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
       const headers = {
@@ -26,7 +26,7 @@ export const checkoutCart = createAsyncThunk(
       const response = await fetch('/api/orders/checkout', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ items, shippingAddress, paymentMethod, paymentDetails })
+        body: JSON.stringify({ items, shippingAddress, paymentMethod, paymentDetails, shippingType, plantTree })
       });
       return await handleResponse(response);
     } catch (e) {
