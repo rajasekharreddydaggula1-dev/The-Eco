@@ -9,9 +9,15 @@ const User = require('../models/User');
 exports.getAnalytics = async (req, res) => {
   try {
     if (req.user.role === 'Vendor') {
-      const storeId = req.user.store;
+      const storeId = req.headers['x-tenant-id'] || req.user.store;
       if (!storeId) {
         return res.status(400).json({ success: false, message: 'Vendor has no store registered.' });
+      }
+
+      // Verify ownership
+      const store = await Store.findById(storeId);
+      if (!store || store.vendor.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Not authorized for this store' });
       }
 
       // 1. Total revenue

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, Search, Sparkles, Building, ChevronRight, Check } from 'lucide-react';
+import { ShoppingBag, Search, Sparkles, Building, ChevronRight, Check, Trophy, Leaf, Users, Shield, Award, TrendingUp } from 'lucide-react';
 import { fetchStores, fetchStoreBySlug, clearCurrentStore } from '../store/slices/storeSlice';
 import { fetchProducts, clearProducts } from '../store/slices/productSlice';
 import ProductCard from '../components/ProductCard';
@@ -194,89 +194,259 @@ export default function StorefrontHome({ onCartClick, cartCount = 0 }) {
           )}
 
           {/* Eco Impact Leaderboard Section */}
-          {!leaderboardLoading && leaderboard && (leaderboard.topCustomers?.length > 0 || leaderboard.topStores?.length > 0) && (
-            <div className="border-t border-slate-900 pt-16 max-w-6xl mx-auto space-y-8 animate-fade-in-up">
-              <div className="text-center space-y-3 max-w-xl mx-auto">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold text-emerald-450 border border-emerald-500/20 shadow-sm backdrop-blur-md">
-                  <span>🌍</span> The Eco Initiative Community
-                </span>
-                <h2 className="text-2xl font-extrabold text-white tracking-tight">Platform Sustainability Leaderboard</h2>
-                <p className="text-xs text-slate-400">
-                  Tracking collective environmental impacts across our multi-tenant SaaS ecosystem. Meet our top carbon-saving partners and shoppers!
-                </p>
-              </div>
+          {!leaderboardLoading && leaderboard && (leaderboard.topCustomers?.length > 0 || leaderboard.topStores?.length > 0) && (() => {
+            const maxCustomerCarbon = Math.max(...leaderboard.topCustomers.map(c => c.carbonSaved || 0), 1);
+            const maxStoreCarbon = Math.max(...leaderboard.topStores.map(s => s.carbonSaved || 0), 1);
+            const totalTrees = leaderboard.topCustomers.reduce((sum, c) => sum + (c.treesPlanted || 0), 0);
+            const totalCarbonSaved = (
+              leaderboard.topCustomers.reduce((sum, c) => sum + (c.carbonSaved || 0), 0) +
+              leaderboard.topStores.reduce((sum, s) => sum + (s.carbonSaved || 0), 0)
+            ).toFixed(1);
+            const activePartnersCount = leaderboard.topStores.length;
 
-              <div className="grid gap-8 md:grid-cols-2">
-                {/* Column 1: Top Customers */}
-                <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-6 space-y-4 backdrop-blur-md">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <span>👑</span> Top Green Shoppers
-                  </h3>
-                  <div className="space-y-3">
-                    {leaderboard.topCustomers.map((cust, idx) => {
-                      const trophy = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🌿';
-                      return (
-                        <div key={cust._id || idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-900/60 bg-slate-905/30 backdrop-blur-sm">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">{trophy}</span>
-                            <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] text-emerald-450 font-extrabold">
-                              {cust.name ? cust.name[0] : 'U'}
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-white text-xs">{cust.name}</h4>
-                              <p className="text-[9px] text-slate-500">Eco Shopper Member</p>
-                            </div>
-                          </div>
-                          <div className="text-right text-[10px] font-semibold space-y-0.5">
-                            <p className="text-emerald-400 flex items-center gap-1 justify-end font-bold">
-                              <span>🌳</span> {cust.treesPlanted || 0} trees
-                            </p>
-                            <p className="text-slate-500 font-mono">{(cust.carbonSaved || 0).toFixed(1)}kg CO₂ saved</p>
-                          </div>
-                        </div>
-                      );
-                    })}
+            return (
+              <div className="border-t border-slate-900/60 pt-20 max-w-6xl mx-auto space-y-12 animate-fade-in-up">
+                {/* Header */}
+                <div className="text-center space-y-4 max-w-2xl mx-auto">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-4 py-1.5 text-xs font-bold text-emerald-450 border border-emerald-500/25 shadow-md backdrop-blur-md">
+                    <Leaf className="h-3.5 w-3.5 animate-pulse text-emerald-400" />
+                    <span>The Eco Initiative Community</span>
+                  </span>
+                  <h2 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
+                    Platform Sustainability Leaderboard
+                  </h2>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    Tracking collective environmental impacts across our multi-tenant SaaS ecosystem. Meet our top carbon-saving partners and shoppers!
+                  </p>
+                </div>
+
+                {/* Platform Collective Stats Banner */}
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto">
+                  {/* Stat 1 */}
+                  <div className="glass-panel p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden group hover:border-emerald-500/25 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+                    <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-440 flex-shrink-0 shadow-inner">
+                      <Leaf className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-2xl font-black text-white font-mono tracking-tight">{totalTrees}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Total Trees Planted</p>
+                    </div>
+                  </div>
+
+                  {/* Stat 2 */}
+                  <div className="glass-panel p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden group hover:border-teal-500/25 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl group-hover:bg-teal-500/10 transition-colors" />
+                    <div className="h-12 w-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0 shadow-inner">
+                      <TrendingUp className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-2xl font-black text-white font-mono tracking-tight">{totalCarbonSaved} kg</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Total CO₂ Saved</p>
+                    </div>
+                  </div>
+
+                  {/* Stat 3 */}
+                  <div className="glass-panel p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden group hover:border-amber-500/25 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
+                    <div className="h-12 w-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-450 flex-shrink-0 shadow-inner">
+                      <Building className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-2xl font-black text-white font-mono tracking-tight">{activePartnersCount}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Eco-Certified Stores</p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Column 2: Top Stores */}
-                <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-6 space-y-4 backdrop-blur-md">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <span>🏬</span> Greenest Merchant Partners
-                  </h3>
-                  <div className="space-y-3">
-                    {leaderboard.topStores.map((store, idx) => {
-                      const trophy = idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🌱';
-                      return (
-                        <div key={store._id || idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-900/60 bg-slate-905/30 backdrop-blur-sm">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">{trophy}</span>
-                            <div className="h-8 w-8 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center flex-shrink-0">
-                              {store.logo ? (
-                                <img src={store.logo} alt="" className="h-full w-full object-cover" />
-                              ) : (
-                                <span className="font-bold text-white text-[10px]">{store.name[0]}</span>
-                              )}
+                <div className="grid gap-8 md:grid-cols-2 lg:gap-12 pt-4">
+                  {/* Column 1: Top Customers */}
+                  <div className="glass-panel rounded-2xl p-6 md:p-8 space-y-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-900">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                          <Users className="h-4 w-4 text-emerald-400" />
+                          <span>Top Green Shoppers</span>
+                        </h3>
+                        <p className="text-[11px] text-slate-505">Shoppers saving carbon through sustainable buying choices</p>
+                      </div>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-widest font-mono">
+                        Global
+                      </span>
+                    </div>
+
+                    <div className="space-y-4">
+                      {leaderboard.topCustomers.map((cust, idx) => {
+                        // Styled rank badges
+                        const isRank1 = idx === 0;
+                        const isRank2 = idx === 1;
+                        const isRank3 = idx === 2;
+
+                        let rankBadgeClass = "bg-slate-900/60 border border-slate-800 text-slate-400";
+                        let rankIcon = <span className="text-xs font-mono font-black">{idx + 1}</span>;
+
+                        if (isRank1) {
+                          rankBadgeClass = "bg-gradient-to-r from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]";
+                          rankIcon = <Trophy className="h-3.5 w-3.5" />;
+                        } else if (isRank2) {
+                          rankBadgeClass = "bg-gradient-to-r from-slate-400/20 to-slate-500/20 border-slate-400/40 text-slate-300 shadow-[0_0_12px_rgba(148,163,184,0.15)]";
+                          rankIcon = <Award className="h-3.5 w-3.5" />;
+                        } else if (isRank3) {
+                          rankBadgeClass = "bg-gradient-to-r from-amber-700/20 to-orange-700/20 border-amber-750/40 text-amber-600/90";
+                          rankIcon = <Award className="h-3.5 w-3.5" />;
+                        }
+
+                        return (
+                          <div 
+                            key={cust._id || idx} 
+                            id={`leaderboard-customer-${idx}`}
+                            className="flex items-center justify-between p-4 rounded-xl border border-slate-900 bg-slate-950/20 hover:bg-slate-950/60 hover:border-emerald-500/20 transition-all duration-300 group/item"
+                          >
+                            <div className="flex items-center gap-3.5">
+                              {/* Position Badge */}
+                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover/item:scale-110 duration-300 ${rankBadgeClass}`}>
+                                {rankIcon}
+                              </div>
+
+                              {/* Avatar */}
+                              <div className="h-9 w-9 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs text-emerald-440 font-extrabold flex-shrink-0 relative">
+                                {cust.name ? cust.name[0].toUpperCase() : 'U'}
+                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border border-slate-950 flex items-center justify-center text-[7px] text-white">✓</span>
+                              </div>
+
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-white text-sm truncate group-hover/item:text-emerald-300 transition-colors">
+                                  {cust.name}
+                                </h4>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[10px] text-slate-500">Eco Shopper</span>
+                                  {cust.ecoPoints > 0 && (
+                                    <>
+                                      <span className="text-[9px] text-slate-650">•</span>
+                                      <span className="text-[9px] font-bold text-brand-400 flex items-center gap-0.5">
+                                        <Sparkles className="h-2.5 w-2.5" />
+                                        {cust.ecoPoints} pts
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-bold text-white text-xs">{store.name}</h4>
-                              <p className="text-[9px] text-slate-500 font-mono">/store/{store.slug}</p>
+
+                            <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
+                              <p className="text-emerald-400 flex items-center gap-1 text-xs font-bold">
+                                <span>🌳</span> {cust.treesPlanted || 0} {cust.treesPlanted === 1 ? 'tree' : 'trees'}
+                              </p>
+                              <p className="text-[11px] text-slate-450 font-mono">{(cust.carbonSaved || 0).toFixed(1)}kg CO₂ saved</p>
+                              
+                              {/* Relative Progress Bar */}
+                              <div className="w-20 bg-slate-900/60 rounded-full h-1 overflow-hidden border border-slate-800/80 mt-1">
+                                <div 
+                                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700" 
+                                  style={{ width: `${Math.min(100, ((cust.carbonSaved || 0) / maxCustomerCarbon) * 105)}%` }} 
+                                />
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right text-[10px] font-semibold space-y-0.5">
-                            <p className="text-emerald-400 flex items-center gap-1 justify-end font-bold">
-                              <span>🌱</span> {store.carbonSaved || 0}kg CO₂ saved
-                            </p>
-                            <p className="text-slate-500 font-mono">Eco Rating: {store.ecoScore || 85}%</p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Column 2: Top Stores */}
+                  <div className="glass-panel rounded-2xl p-6 md:p-8 space-y-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-900">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                          <Building className="h-4 w-4 text-emerald-400" />
+                          <span>Greenest Merchant Partners</span>
+                        </h3>
+                        <p className="text-[11px] text-slate-505 font-medium">Stores minimizing environmental footprint in logistics</p>
+                      </div>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-teal-500/10 border border-teal-500/20 text-teal-450 uppercase tracking-widest font-mono">
+                        Partners
+                      </span>
+                    </div>
+
+                    <div className="space-y-4">
+                      {leaderboard.topStores.map((store, idx) => {
+                        // Styled rank badges
+                        const isRank1 = idx === 0;
+                        const isRank2 = idx === 1;
+                        const isRank3 = idx === 2;
+
+                        let rankBadgeClass = "bg-slate-900/60 border border-slate-800 text-slate-400";
+                        let rankIcon = <span className="text-xs font-mono font-black">{idx + 1}</span>;
+
+                        if (isRank1) {
+                          rankBadgeClass = "bg-gradient-to-r from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]";
+                          rankIcon = <Trophy className="h-3.5 w-3.5" />;
+                        } else if (isRank2) {
+                          rankBadgeClass = "bg-gradient-to-r from-slate-400/20 to-slate-500/20 border-slate-400/40 text-slate-300 shadow-[0_0_12px_rgba(148,163,184,0.15)]";
+                          rankIcon = <Award className="h-3.5 w-3.5" />;
+                        } else if (isRank3) {
+                          rankBadgeClass = "bg-gradient-to-r from-amber-700/20 to-orange-700/20 border-amber-750/40 text-amber-600/90";
+                          rankIcon = <Award className="h-3.5 w-3.5" />;
+                        }
+
+                        return (
+                          <Link 
+                            key={store._id || idx} 
+                            to={`/store/${store.slug}`}
+                            id={`leaderboard-store-${store.slug}`}
+                            className="flex items-center justify-between p-4 rounded-xl border border-slate-900 bg-slate-950/20 hover:bg-slate-950/60 hover:border-teal-500/20 transition-all duration-300 group/item cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              {/* Position Badge */}
+                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover/item:scale-110 duration-300 ${rankBadgeClass}`}>
+                                {rankIcon}
+                              </div>
+
+                              {/* Logo */}
+                              <div className="h-9 w-9 rounded-lg bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-md">
+                                {store.logo ? (
+                                  <img src={store.logo} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <span className="font-bold text-white text-xs">{store.name[0].toUpperCase()}</span>
+                                )}
+                              </div>
+
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-white text-sm truncate group-hover/item:text-teal-350 transition-colors">
+                                  {store.name}
+                                </h4>
+                                <p className="text-[10px] text-slate-500 font-mono tracking-tight mt-0.5 truncate">/store/{store.slug}</p>
+                              </div>
+                            </div>
+
+                            <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
+                              <p className="text-teal-400 flex items-center gap-1 text-xs font-bold">
+                                <span>🌱</span> {(store.carbonSaved || 0).toFixed(1)}kg CO₂
+                              </p>
+                              <div className="flex items-center gap-1 text-[10px]">
+                                <span className="text-slate-550">Eco Score</span>
+                                <span className="font-bold text-brand-400">{store.ecoScore || 85}%</span>
+                              </div>
+                              
+                              {/* Relative Progress Bar */}
+                              <div className="w-20 bg-slate-900/60 rounded-full h-1 overflow-hidden border border-slate-800/80 mt-1">
+                                <div 
+                                  className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-700" 
+                                  style={{ width: `${Math.min(100, ((store.carbonSaved || 0) / maxStoreCarbon) * 105)}%` }} 
+                                />
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
     );

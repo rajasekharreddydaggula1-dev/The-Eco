@@ -538,8 +538,11 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Vendor can only update orders from their store
-    if (req.user.role === 'Vendor' && order.store.toString() !== req.user.store.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to modify this order' });
+    if (req.user.role === 'Vendor') {
+      const store = await Store.findById(order.store);
+      if (!store || store.vendor.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Not authorized to modify this order' });
+      }
     }
 
     const { status } = req.body;

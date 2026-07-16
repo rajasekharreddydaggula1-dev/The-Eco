@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   Plus, Trash2, Edit2, BarChart2, Package, ShoppingCart, 
-  Settings, LogOut, Check, ArrowRight, Layers, FileText, Activity 
+  Settings, LogOut, Check, ArrowRight, Layers, FileText, Activity,
+  Building
 } from 'lucide-react';
 import { logout } from '../store/slices/authSlice';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../store/slices/productSlice';
@@ -333,6 +334,15 @@ export default function VendorDashboard() {
             >
               {addStoreSaving ? 'Creating Storefront...' : 'Launch Storefront Brand'}
             </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-850 py-2.5 font-bold border border-slate-800 text-slate-400 hover:text-red-400 transition-colors font-sans"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout of Account
+            </button>
           </form>
         </div>
       </div>
@@ -565,7 +575,7 @@ export default function VendorDashboard() {
                 products.map((prod) => (
                   <div key={prod._id} className="rounded-xl border border-slate-850 bg-slate-900/30 overflow-hidden flex flex-col">
                     <img 
-                      src={prod.images[0] || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600'} 
+                      src={prod.images?.[0] || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600'} 
                       alt="" 
                       className="h-40 w-full object-cover border-b border-slate-900" 
                     />
@@ -573,12 +583,12 @@ export default function VendorDashboard() {
                       <div>
                         <div className="flex justify-between items-start">
                           <span className="font-bold text-slate-200 text-sm">{prod.name}</span>
-                          <span className="text-xs font-mono text-eco-400 font-bold">₹{prod.price.toFixed(2)}</span>
+                          <span className="text-xs font-mono text-eco-400 font-bold">₹{prod.price?.toFixed(2) || '0.00'}</span>
                         </div>
                         <p className="text-slate-400 mt-1 line-clamp-2 text-xs">{prod.description}</p>
                         
                         <div className="mt-3 flex flex-wrap gap-1">
-                          {prod.variants.map((v, i) => (
+                          {(prod.variants || []).map((v, i) => (
                             <span key={i} className="bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-[9px] text-slate-400">
                               {v.name} (₹{v.price})
                             </span>
@@ -640,7 +650,7 @@ export default function VendorDashboard() {
                             <div className="space-y-1">
                               <span className="font-semibold text-slate-200 block text-xs">ID: {order._id}</span>
                               <div className="space-y-0.5">
-                                {order.items.map((item, idx) => (
+                               {(order.items || []).map((item, idx) => (
                                   <span key={idx} className="block text-[10px] text-slate-400">
                                     • {item.name} {item.variantName ? `(${item.variantName})` : ''} x{item.quantity}
                                   </span>
@@ -655,7 +665,7 @@ export default function VendorDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="font-bold text-white">₹{order.totalAmount.toFixed(2)}</span>
+                            <span className="font-bold text-white">₹{order.totalAmount?.toFixed(2) || '0.00'}</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex rounded-full px-2 py-0.5 font-medium text-[9px] uppercase border ${

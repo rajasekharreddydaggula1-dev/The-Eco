@@ -52,7 +52,7 @@ exports.getProductById = async (req, res) => {
 exports.createProduct = async (req, res) => {
   try {
     // Ensure vendor is editing their own store
-    if (req.user.role === 'Vendor' && req.user.store.toString() !== req.tenantId) {
+    if (req.user.role === 'Vendor' && req.store.vendor.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'You can only add products to your own store' });
     }
 
@@ -91,7 +91,7 @@ exports.updateProduct = async (req, res) => {
     }
 
     // Ensure vendor matches
-    if (req.user.role === 'Vendor' && req.user.store.toString() !== req.tenantId) {
+    if (req.user.role === 'Vendor' && req.store.vendor.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to modify this store\'s products' });
     }
 
@@ -129,7 +129,7 @@ exports.deleteProduct = async (req, res) => {
     }
 
     // Ensure vendor matches
-    if (req.user.role === 'Vendor' && req.user.store.toString() !== req.tenantId) {
+    if (req.user.role === 'Vendor' && req.store.vendor.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this store\'s products' });
     }
 
